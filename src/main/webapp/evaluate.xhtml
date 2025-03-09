@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Evaluacion de versos</title>
+    <style>
+        .task-lists {
+            margin: 10px;
+            padding: 10px;
+            padding-top: 5px;
+            font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            color: #282828;
+            background-color: #FFFFFF;
+            text-align: left;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="updateForm">
+        <script>
+            function copyTxt(copyText) {
+                navigator.clipboard.writeText(copyText);
+            }
+        </script>
+        <p:messages id="messages" showDetail="true" closable="true">
+            <p:autoUpdate />
+        </p:messages>
+		<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+
+		<p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+			<div class="text-center">
+				<i class="pi pi-spin pi-spinner loading-icon" aria-hidden="true"></i>
+			</div>
+		</p:dialog>
+        <div class="task-lists">
+            <h:panelGrid columns="1" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 400px;">
+                <p:inputTextarea value="#{evaluateController.input}" rows="8" cols="190" autoResize="false" />
+                <br/>
+                <br/>
+                <p:commandButton value="Evaluar" styleClass="mr-2" style="width: auto"
+                    action="#{evaluateController.evaluate}" update="issues" />
+                <br/>
+                <br/>
+                <p:dataTable id="issues" var="o" value="#{evaluateController.issues}" scrollable="true" scrollHeight="260">
+                    <f:facet name="header">
+                        #{evaluateController.issues.size()} discordancias
+                    </f:facet>
+
+                    <p:column>
+						<h:outputText value="#{o}" 
+							escape="false" style="white-space:pre-line;" />
+                    </p:column>
+                </p:dataTable>
+            </h:panelGrid>
+        </div>
+    </h:form>
+</h:body>
+
+</html>

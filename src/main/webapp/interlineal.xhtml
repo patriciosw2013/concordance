@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Interlineal</title>
+    <style>
+        .parrafo {
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+        }
+
+        .task-lists {
+            margin: 10px;
+            padding: 10px;
+            padding-top: 5px;
+            font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            color: #282828;
+            background-color: #FFFFFF;
+            text-align: left;
+        }
+
+        .side-left {
+			width: 350px;
+		}
+		
+		.side-right {
+			width: 900px;
+		}
+		
+		.product-grid-item {
+			background: var(--surface-e);
+			box-shadow: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
+			border-radius: 4px;
+			margin-bottom: 2rem;
+			padding: 20px;
+		}
+		
+		.item-id {
+			height: 40px;
+		}
+		
+		.item-type {
+			font-size: 1rem;
+			font-weight: 600;
+		}
+		
+		.item-meanign {
+			font-size: 1rem;
+			font-weight: bold;
+			color: red;
+		}
+		
+		.column-code {
+			display: flex;
+			align-items: flex-start;
+			width:180px;
+			margin: 12px;
+			font-weight: bold;
+			vertical-align: top;
+		}
+		
+		.column-descr {
+			display: block;
+			margin: 15px;
+		}
+
+        .odd {
+            background-color: #f2f2f2 !important; /* Color gris claro */
+			/* color: #ffffff !important; */
+        }
+
+        .even {
+            background-color: #ffffff !important; /* Color blanco */
+        }
+		
+		.my-heading-row {
+            /* background-color: var(--surface-c); */
+            font-weight: bold;
+			display: block; /* Hace que el elemento ocupe todo el ancho disponible */
+			width: 100%; /* Ocupa el 100% del ancho de su contenedor */
+			text-align: center; /* Centra el texto horizontalmente */
+			background-color: #f2f2f2; /* Color de fondo gris */
+			padding: 5px; /* Añade algo de espacio dentro del label (opcional) */
+			box-sizing: border-box; /* Asegura que el padding no afecte al ancho total */
+        }
+		
+		.recuadro {
+			/* font-style: italic; Texto en cursiva */
+			background-color: #f2f2f2; /* Fondo gris */
+			padding: 10px; /* Espaciado interno */
+			/*border: 2px solid #d3d3d3;  Borde gris */
+			/*border-radius: 5px;  Bordes redondeados */
+			margin-top: 15px;
+		}
+    </style>
+</h:head>
+<h:body>
+    <h:form id="updateForm">
+        <script>
+            function copyTxt(copyText) {
+                navigator.clipboard.writeText(copyText);
+            }
+        </script>
+        <p:messages id="messages" showDetail="true" closable="true">
+            <p:autoUpdate />
+        </p:messages>
+		<p:remoteCommand name="ldStrong" update="modalStrong" action="#{interlinealController.loadStrongParam}" oncomplete="PF('dlgStr').show()"/>
+        <p:dialog id="modalReferences" header="Usos en la Escritura" widgetVar="dlgRef" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
+            <p:dataTable id="issues" var="o" value="#{interlinealController.references}" scrollable="true" scrollHeight="350" showGridlines="true"
+                rowIndexVar="rowIndex" rowStyleClass="#{(rowIndex % 2) eq 0 ? 'even' : 'odd'}">
+                <f:facet name="header">
+                    #{interlinealController.references.size()} usos
+                </f:facet>
+                <p:column headerText="Verso" style="width: 65%;">
+                    <h:outputText value="#{o.valor}" escape="false" style="white-space:pre-line;" />
+                </p:column>
+                <p:column headerText="Palabra" style="width: 35%;">
+                    <h:outputText value="#{o.codigo}" escape="false" style="white-space:pre-line;" />
+                </p:column>
+            </p:dataTable>
+        </p:dialog>
+        <p:dialog id="modalNot" header="Notacion gramatical" widgetVar="dlgNot" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
+            <p:dataTable id="nots" var="o" value="#{interlinealController.notationDetail.detail}" scrollable="true" scrollHeight="350" showGridlines="true"
+                rowIndexVar="rowIndex" rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}" >
+                <f:facet name="header">
+                    Morfologia. #{interlinealController.notationDetail.notation}
+                </f:facet>
+                <p:column headerText="Tipo" style="width: 20%;">
+                    <h:outputText value="#{o.descripcion}" />
+                </p:column>
+                <p:column headerText="Código" style="width: 20%;">
+                    <h:outputText value="#{o.codigo}" style="color: green;" />
+                </p:column>
+                <p:column headerText="Descripción" style="width: 60%;">
+                    <h:outputText value="#{o.valor}" />
+                </p:column>
+            </p:dataTable>
+        </p:dialog>
+        <p:dialog id="modalStrong" header="Diccionario Strong" widgetVar="dlgStr" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
+			<p:scrollPanel mode="native" id="pnl" style="width: 660px; height: 380px;">
+                <h:outputText value="#{interlinealController.strong.language} ##{interlinealController.strong.strongId} - #{interlinealController.strong.defGlobal}" 
+					styleClass="my-heading-row" escape="false" />
+                <br/>
+                <h:panelGrid columns="2" columnClasses="column-code column-descr">
+                    <h:outputText value="Palabra original:" />
+                    <h:outputText value="#{interlinealController.strong.word}" escape="false" />
+                    
+                    <h:outputText value="Definición:" />
+                    <h:outputText value="#{interlinealController.strong.def}" />
+                    
+                    <h:outputText value="Definición2:" />
+                    <h:outputText value="#{interlinealController.strong.defAlterna}" />
+
+                    <h:outputText value="Tipo:" />
+                    <h:outputText value="#{interlinealController.strong.type}" />
+
+                    <h:outputText value="Derivacion:" />
+                    <h:outputText value="#{interlinealController.strong.deriva}" escape="false" />
+
+                    <h:outputText value="Def. en RV1909:" />
+                    <h:outputText value="#{interlinealController.strong.defRV}" />
+                </h:panelGrid>
+			</p:scrollPanel>
+        </p:dialog>
+        <div class="task-lists">
+            <h:panelGrid columns="7" style="padding-left: 30px; padding-right: 30px;">
+                <p:inputText id="inputTxt" value="#{interlinealController.input}" />
+
+                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto"
+                    action="#{interlinealController.evaluate}" update="updateForm:searchItems, updateForm:inputTxt" />
+            </h:panelGrid>
+            <h:panelGrid id="searchItems" columns="1" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 100%">
+				<div class="recuadro">
+                    #{interlinealController.cita.cita()}
+                    <br/>
+                    <br/>
+					#{interlinealController.reference}
+				</div>
+                <br/>
+				<p:dataGrid id="data" var="o" value="#{interlinealController.words}" columns="5" layout="grid">
+                    <f:facet name="header">
+						<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <p:commandLink value="&lt;" action="#{interlinealController.navigate(0)}" update="updateForm:searchItems"/>
+						<h:outputText value="#{interlinealController.cita.cita()}" style="text-align: center; flex-grow: 1;"/>
+                        <p:commandLink value="&gt;" action="#{interlinealController.navigate(1)}" update="updateForm:searchItems"/>
+						</div>
+                    </f:facet>
+					<div class="product-grid-item">
+						<div class="item-id">
+							<i class="pi pi-tag product-category-icon"/>
+							<p:commandLink value="#{o.strongId}" action="#{interlinealController.loadStrong(o.strongId)}" 
+                                update="updateForm:modalStrong"
+                                oncomplete="PF('dlgStr').show()"/>
+
+                            <p:commandButton id="lnkRef" value="" icon="pi pi-bookmark" styleClass="rounded-button ui-button-secondary ui-button-outlined" 			
+								action="#{interlinealController.loadReferences(o.strongId)}" style="height:32px;width:32px;margin-left:10px;"
+                                update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()"/>
+                            <p:tooltip for="lnkRef" value="Ocurrencias en la Escritura" position="right"/>
+						</div>
+						<div class="product-name"><span class="product-category">#{o.word}</span></div>
+						<div class="item-type">
+                            <p:commandLink id="right" value="#{o.type}" action="#{interlinealController.loadNotationDetail(o.type)}" 
+                                update="updateForm:modalNot"
+                                oncomplete="PF('dlgNot').show()"/>
+                            <p:tooltip for="right" value="#{o.morfologic}" position="right"/>
+                        </div>
+						<div class="item-meanign">#{o.meaning}</div>
+					</div>
+				</p:dataGrid>
+            </h:panelGrid>
+        </div>
+    </h:form>
+</h:body>
+
+</html>

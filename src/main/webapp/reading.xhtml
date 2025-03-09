@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Lectura</title>
+    <style>
+        .parrafo {
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+        }
+
+        .task-lists {
+            margin: 10px;
+            padding: 10px;
+            padding-top: 5px;
+            font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            color: #282828;
+            background-color: #FFFFFF;
+            text-align: left;
+        }
+		
+		.side-left {
+			width: 350px;
+		}
+		
+		.side-right {
+			width: 900px;
+		}
+
+        .preformatted {
+            white-space: pre-wrap;
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            width: 400px;
+        }
+
+        .ui-scrollpanel-hbar {
+            overflow-x: initial;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="updateForm">
+        <script>
+            function copyTxt(copyText) {
+                navigator.clipboard.writeText(copyText);
+            }
+        </script>
+        <p:messages id="messages" showDetail="true" closable="true">
+            <p:autoUpdate />
+        </p:messages>
+        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+            <p:scrollPanel mode="native" id="pnlNotes" style="width: 450px; height: 300px;">
+                <h:outputText value="#{readingController.notes}" styleClass="preformatted" escape="false" />
+            </p:scrollPanel>
+        </p:dialog>
+        <div class="task-lists">
+            <h:panelGrid columns="4" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 400px;">
+                <p:selectOneMenu id="option" value="#{readingController.base}">
+                    <f:selectItems var="o" value="#{readingController.bases}" itemLabel="#{o}" itemValue="#{o}" />
+                    <p:ajax event="valueChange" listener="#{readingController.search}" update="bookTree"/>
+                </p:selectOneMenu>
+            </h:panelGrid>
+            <p:panelGrid columns="2" layout="grid" style="padding: 20px;" styleClass="side-left side-right">
+                <h:panelGroup/>
+				<h:panelGroup id="colTitle">
+                    <h:panelGrid columns="3" width="1000">
+                        <h:outputText id="txtTitle" style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px; width: 800px;"
+                            value="#{readingController.title}" />
+                        
+                        <p:commandButton value="" rendered="#{not empty readingController.notes}" type="button" style="width:30px;" 
+                            icon="pi pi-check" onclick="PF('dlg1').show()"/>
+                        
+                        <p:selectOneMenu id="chapters" value="#{readingController.chapter}" rendered="#{not empty readingController.chapters}">
+                            <f:selectItems var="o" value="#{readingController.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
+                            <p:ajax event="valueChange" listener="#{readingController.viewChapter}" update="pnl" process="@this"/>
+                        </p:selectOneMenu> 
+                    </h:panelGrid>  
+				</h:panelGroup>
+				
+                <p:treeTable id="bookTree" value="#{readingController.books}" var="o" size="small" selection="#{readingController.book}" selectionMode="single" scrollable="true"
+                    scrollHeight="520"
+                    style="width: 100%; height: 100%; font-size: 14px;">
+                    <p:ajax event="select" listener="#{readingController.onSelect}" update="updateForm:pnl,updateForm:modalNotes,updateForm:colTitle"/>
+                    <p:column>
+                        <h:outputText value="#{o.valor}"/>
+                    </p:column>
+                </p:treeTable>
+
+                <p:scrollPanel mode="native" id="pnl" style="width: 1000px; height: 520px;">
+                    <h:outputText value="#{readingController.txt}" styleClass="preformatted" escape="false" />
+                </p:scrollPanel>
+            </p:panelGrid>
+        </div>
+    </h:form>
+</h:body>
+
+</html>

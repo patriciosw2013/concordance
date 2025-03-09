@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Concordancia</title>
+    <style>
+        .parrafo {
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+        }
+
+        .task-lists {
+            margin: 10px;
+            padding: 10px;
+            padding-top: 5px;
+            font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            color: #282828;
+            background-color: #FFFFFF;
+            text-align: left;
+        }
+
+        .preformatted {
+            white-space: pre-wrap;
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            width: 400px;
+        }
+
+        .ui-scrollpanel-hbar {
+            overflow-x: initial;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="updateForm">
+        <script>
+            function copyTxt(copyText) {
+                // Copy the text inside the text field
+                navigator.clipboard.writeText(copyText);
+            }
+        </script>
+        <p:messages id="messages" showDetail="true" closable="true">
+            <p:autoUpdate />
+        </p:messages>
+        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+            <p:scrollPanel mode="native" id="pnlNotes" style="width: 450px; height: 300px;">
+                <h:outputText value="#{concordanciaController.notes}" styleClass="preformatted" escape="false" />
+            </p:scrollPanel>
+        </p:dialog>
+        <div class="task-lists">
+            <h:panelGrid columns="8" style="padding-left: 30px; padding-right: 30px; width: 700px;">
+                <p:inputText id="float-input" value="#{concordanciaController.input}" />
+
+                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto"
+                    action="#{concordanciaController.search}" update="searchItems" />
+
+                <p:divider layout="vertical" style="width: 100px;" />
+
+                <p:selectOneMenu id="option" value="#{concordanciaController.base}">
+                    <f:selectItems var="o" value="#{concordanciaController.bases}" itemLabel="#{o}" itemValue="#{o}" />
+                </p:selectOneMenu>
+				
+				<p:divider layout="vertical" style="width: 100px;" />
+
+                <p:link href="http://localhost:8080/concordance/evaluate.xhtml" value="Evaluar" target="_blank" style="margin-left: 10px;" />
+
+                <p:link href="http://localhost:8080/concordance/reading.xhtml" value="Lectura" target="_blank" style="margin-left: 10px;" />
+
+                <p:link href="http://localhost:8080/concordance/interlineal.xhtml" value="Interlineal" target="_blank" style="margin-left: 10px;" />
+            </h:panelGrid>
+            <p:panelGrid columns="2" layout="grid" style="padding: 20px;">
+                <p:row>
+                    <p:column></p:column>
+                    <p:column>
+                        <h:panelGroup id="colTitle">
+                            <h:outputText id="txtTitle" style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px;"
+                                value="#{concordanciaController.title}" />
+                            
+                            <p:commandButton value="" rendered="#{not empty concordanciaController.notes}" type="button" style="width:30px;" 
+                                icon="pi pi-check" onclick="PF('dlg1').show()"/>
+                        </h:panelGroup>
+                    </p:column>
+                </p:row>
+                <p:selectOneListbox id="searchItems" value="#{concordanciaController.verseId}" scrollHeight="520"
+                    style="width: 650px; height: 520px; font-size: 14px;" widgetVar="selIt">
+                    <f:selectItems var="o" value="#{concordanciaController.verses}" itemLabel="#{o.text}" itemLabelEscaped="false"
+                        itemValue="#{o.recordId}" />
+                    <p:ajax event="itemSelect" listener="#{concordanciaController.onSelect()}" update="pnl,modalNotes,colTitle"
+                        oncomplete="copyTxt(PF('selIt').focusedItem.text());" />
+                </p:selectOneListbox>
+
+                <p:scrollPanel mode="native" id="pnl" style="width: 700px; height: 520px;">
+                    <h:outputText value="#{concordanciaController.txt}" styleClass="preformatted" escape="false" />
+                </p:scrollPanel>
+            </p:panelGrid>
+        </div>
+    </h:form>
+</h:body>
+
+</html>
