@@ -20,6 +20,7 @@ public class SQLUtil {
 			bases.put("NVI", "D:\\Desarrollo\\databases\\nvi.sqlite");
 			bases.put("TLA", "D:\\Desarrollo\\databases\\tla.sqlite");
 			bases.put("DHH", "D:\\Desarrollo\\databases\\DHH.sqlite");
+			bases.put("NBLA", "D:\\Desarrollo\\databases\\nbla.sqlite");
 			bases.put("Patristica", "D:\\Desarrollo\\databases\\patristica.db");
 			bases.put("Autores", "D:\\Desarrollo\\databases\\Autores.db");
 			bases.put("Notas", "D:\\Desarrollo\\databases\\patristica.db");

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import com.concordance.services.vo.ItemVo;
 
@@ -59,9 +60,18 @@ public class WebUtil {
     //txt = txt.substring(0, txt.indexOf("Mostrar Biblia Interlineal"));
     //txt = TextUtils.quitarSaltosDeLinea(txt);
 
+    public static String leerPaginaWeb(String urlString) throws IOException {
+        Document doc = Jsoup.connect(urlString).get();
+        return doc.html(); // Jsoup.parse(doc.html()).wholeText();
+    }
+
+    public static String formatHtml(String in) {
+        return Jsoup.parse(in).wholeText();
+    }
+
     public static void main(String[] args) {
         try {
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }

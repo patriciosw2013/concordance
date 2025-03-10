@@ -30,6 +30,7 @@ import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.interlineal.InterlinealVo;
 import com.concordance.services.vo.interlineal.NotationDetailVo;
 import com.concordance.services.vo.interlineal.NotationVo;
+import com.concordance.services.vo.interlineal.StrongDetailVo;
 import com.concordance.services.vo.interlineal.StrongVo;
 
 public class InterlinealService {
@@ -178,7 +179,7 @@ public class InterlinealService {
         return res;
     }
 
-    public static StrongVo strongDetail(int strongId, String language) throws SQLException, IOException {
+    public static StrongDetailVo strongDetail(int strongId, String language) throws SQLException, IOException {
         ResultSet result = null;
         try (Connection conn = db.connection(base)) {
             String sql = "select i.language, i.def, i.def_alterna, i.type, i.deriva, i.def_rv, i.word, i.def_global " +
@@ -186,26 +187,27 @@ public class InterlinealService {
             try (PreparedStatement st = conn.prepareStatement(sql)) {
                 result = st.executeQuery();
                 if(result.next()) {
-                    StrongVo o = new StrongVo();
+                    StrongDetailVo o = new StrongDetailVo();
                     o.setStrongId(strongId);
                     o.setLanguage(result.getString(1));
-                    o.setDef(result.getString(2));
-                    o.setDefAlterna(result.getString(3));
-                    o.setType(result.getString(4));
-                    o.setDeriva(result.getString(5));
-                    o.setDefRV(result.getString(6));
-                    o.setWord(result.getString(7));
                     o.setDefGlobal(result.getString(8));
-
-                    if(o.getDeriva() != null) {
-                        //o.setDeriva(o.getDeriva().replaceAll("(\d+)", "<span style=\"color: red; font-weight: bold;\">$1</span>"));
-                        o.setDeriva(o.getDeriva().replaceAll("(\\d+)", "<a href=\"#\" onclick=\"ldStrong([{name: 'param1', value: this.textContent}]);\">$1</a>"));
-                    }
+                    o.setDetails(Arrays.asList(new String[]{"Palabra original:", result.getString(7)},
+                        new String[]{"Definición:", result.getString(2)},
+                        new String[]{"Definición2:", result.getString(3)},
+                        new String[]{"Tipo:", result.getString(4)},
+                        new String[]{"Derivacion:", formatDeriva(result.getString(5))},
+                        new String[]{"Def. en RV1909", result.getString(6)}));
 
                     return o;
                 } else return null;
             }
         }
+    }
+
+    private static String formatDeriva(String in) {
+        if(in == null) return null;
+
+        return in.replaceAll("(\\d+)", "<a href=\"#\" onclick=\"ldStrong([{name: 'param1', value: this.textContent}]);\">$1</a>");
     }
 
     public static void loadInterlinealKL() throws SQLException, IOException {

@@ -20,7 +20,7 @@ parent VARCHAR(100), title varchar(300), autor varchar(100), PRIMARY KEY (id));
 CREATE TABLE chapter (id INTEGER NOT NULL, book_id INTEGER, name text, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
 
 CREATE TABLE verse (id integer NOT NULL primary key, 
-book_id INTEGER, verse integer, text TEXT, FOREIGN KEY(book_id) REFERENCES book (id));
+book_id INTEGER, chapter_id integer, verse integer, text TEXT, FOREIGN KEY(book_id) REFERENCES book (id));
 
 CREATE TABLE interlineal (id integer NOT NULL primary key, 
 book_id INTEGER, chapter integer, verse integer, strong_id integer, word text, type text, meaning TEXT, 
@@ -36,6 +36,7 @@ update strong set testament_id = 2 where language = 'griego';
 
 alter table book add column destination varchar(100);
 alter table book add column bookDate varchar(70);
+alter table book add column abb text;
 alter table verse add column chapter varchar(100);
 alter table verse add column chapter_id integer;
 
@@ -174,6 +175,10 @@ update verse set verse = CAST(substr(text, 0, instr(text, '.')) as integer) wher
 -- borrar libro
 delete from verse where book_id in (select id from book where parent = 'Agustin de Hipona - Sermon de la montaña.docx')
 delete from book where parent = 'Agustin de Hipona - Sermon de la montaña.docx'
+
+delete from verse where book_id in (select id from book where autor in ('Baruc Korman', 'Fabian Liendo', 'Charles Stanley'));
+delete from chapter where book_id in (select id from book where autor in ('Baruc Korman', 'Fabian Liendo', 'Charles Stanley'));
+delete from book where autor in ('Baruc Korman', 'Fabian Liendo', 'Charles Stanley');
 
 -- quitar parentesis de nombre
 update book set name = trim(substr(name, 0, instr(name, '('))) where name REGEXP '[\(\)]' and parent = 'Sermones'

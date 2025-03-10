@@ -29,6 +29,8 @@ public class InterlinealVo {
     }
 
     public String txt() {
-        return strongId + "\n" + word + "\n" + type + "\n" + meaning;
+        return "<span style=\"color: #007ad9;\">" + strongId + "</span>\n" + word + 
+            "\n<span style=\"font-weight: bold; color: #007ad9;\">" + type + 
+            "</span>\n<span style=\"color: #d9534f;\">" + meaning;
     }
 }

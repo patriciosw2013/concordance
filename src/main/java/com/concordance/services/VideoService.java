@@ -10,9 +10,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,20 +37,53 @@ public class VideoService {
 			.title("EXPOSICION")
 			.groupingBy(true)
 			.expositive(true)
-			.regexReplace(Arrays.asList("^(.*)aquí está baruk y la lección de hoy "))
+			.regexReplace(Arrays.asList("^(.*)aquí está baruk y la lección de hoy ", 
+				"^(.*)está baruk y la lección de \\[Música\\] ",
+				"^(.*)y la lección de \\[Música\\] hoy ",
+				"^(.*)y la lección de hoy \\[Música\\]",
+				"^(.*)aquí está barud y la lección de hoy",
+				"^(.*)estaba luz y la lección de hoy",
+				"^(.*)Ruth y la lección de hoy",
+				" te invitamos a seguir nuestros estudios cada semana por este canal y por el portal.*$",
+				" Esperamos que te hayas edificado con el mensaje de hoy.*$"))
 			.removeIni(Arrays.asList("aquí está barón y la lección de hoy [Música]", "aquí está baruc y la lección de hoy [Música]",
+				"what you believe that create ", "nery times week ", "yuyu jefe del raid profedet ", "we had ", "johnny wright ",
+				"very important a ", "when you here ", "many people when the ear ", "uy bienestar y netbook ians ",
 				"aquí está barón y la lección de hoy", "aquí está baruc y la lección de hoy", "Aquí está Baruc y la lección de hoy"))
 			.removeFin(Arrays.asList("esperamos que se haya beneficiado del mensaje", "esperamos que te hayas beneficiado del mensaje",
 				"esperamos que te hayas edificado con el mensaje")).build());
 		metas.put("subtitles-liendo", VideoMetadataVo.builder()
 			.title("MENSAJE")
 			.titleKey(" - ")
-			.reeplaceTitle(true).build());
+			.reeplaceTitle(true)
+			.regexReplace(Arrays.asList("\\[Música\\] ", "\\[Música\\]", "\\[Aplausos\\] ")).build());
 		metas.put("subtitles-stanley", VideoMetadataVo.builder()
 			.title("MENSAJE")
 			.titleKey("-")
-			.regexReplace(Arrays.asList("^(.*)Dr. Stanley: ", "\\[música\\] ", "\\[Música\\] "))
-			.reeplaceTitle(true).build());
+			.regexReplace(Arrays.asList("^(.*)Dr. Stanley:", "^(.*)Dr. Charles Stanley:", "^(.*)hoy en el programa en contacto",
+				"si este programa ha sido de bendición para usted.*$",
+				"locutor: Si este programa ha sido de bendición para usted.*$",
+				"\\[música\\] ", "\\[Música\\] ", "\\[música\\]", "\\[Música\\]",
+				"^(.*)comienza una serie (.*) el mensaje de hoy ",
+				"^comience su día con el devocional gratuito en contacto suscríbase hoy mismo",
+				"^(.*)hoy en el programa 'en contacto'"))
+			.reeplaceTitle(true)
+			.exceptions(Arrays.asList("3-DVoKSzUqs", "6vaGzQoa5Yo", "6dindXWhaxE", "64_X1OthKPk", "dLX0TeNKwS8", "HOQYXVhI9QQ",
+				"x9Hv9HyJiKs", "nMEVNWTMp7g", "UvpbJienzeg", "jp-YnMcXCsU", "Q-14xcPOgak", "tgd1dnIKc2U", "fMo3x-Jz4PY", "3_3XyowJdKE", 
+				"sf305tRwuIg", "LKqGcUvkN3o", "xC3Mwyy2g3k", "4efocWotygw", "FuhOgQwNlr4", "U7glXPyAKAQ", "gAtvsvs1pHs", "OQHz07Ncv-I", 
+				"9gqm4-Wg1z4", "DHwTtX7gA9M", "4haYcNEqoSk", "XlZn1Uto11I", "RMqJZphg7SE", "NudxZzfu0Mw", "mdQ8gqdO4T0", "MyAHGeoPhhY",
+				"e0Fi5Pegwks", "Ofs8j4oZosk", "z6UIRKBGzek", "Xc8PnoTGhTQ", "x7pi6UyUSQo", "aaBIa908Xws", "0SN6RvoyXvM", "MmAekzVWudc", 
+				"kiREM1y1RjE", "NVyogwWA0nk", "vFsWvfd5_ek", "aZkDp51VAMc", "lDogYxWR42A", "ns3aejSXZ_g", "auV0ZQzks1Q", "K2myZaEbBDU",
+				"s4NxDoyLQ48", "4SNrikZvfKE", "iKO60nah57I", "7vprSta-TAU", "x5h_e7zT8gQ", "YbQzs4-EfQ4", "slzQpWytAhY", "LpAsM6sejzc", 
+				"YN1S33-ps9E", "OcfoEv_8Uv0", "GuKlhOmFeyQ", "hiSlE_LQnEE", "HyOErr1zXF0", "4APAY-KEydE", "GwyAjle2LgI", "hRLa68vpoms",
+				"s9zA5d3hI70", "kS1iRFFIGyA", "9JAhbYUE6H8", "dIZzTAiHf1s", "_bFvdiPIl8Q", "pHne0puTDhM", "nlGpkREyHe8", "6xsJy38-coU", 
+				"KZxe-aSzxZ4", "rHnvdkiRExw", "Kh1IalkA3Tw", "kMvt5AkwBMI", "PfdvVp3POmc", "jU23O_GE3-Y", "i4ZN5NnUhe8", "N29qaj_-ii4", 
+				"eh8lJRPuctY", "Jydvm7VuAzk", "YXoRArJLSks", "vtXj5co_lWM", "0yXxIv96gBo", "_LjJQgw9biE", "kjgQuk1QGyg", "cyuyp4JQtb8", 
+				"TxtsnQkP1OI", "9_a5bO6wABA", "XVx9yMwNKGI", "HWGIGmQiF-E", "stdqFohYlvw", "TMLes31l6lI", "JfHzU_69Z4U", "kg3W7Mg48MM", 
+				"B9pwVv0FlhY", "0hjPbnBfrjQ", "JyCzY7QqMSI", "TKLn2DCTD_s", "A0A_a3mkaeY", "gPZhw7I17sc", "zIHBcdYC3BE", "6N3KqbvvFf0",
+				"lNOjfODqOzA", "Ha9fX9B0g7Q", "cbVrtr_ypgo", "TlExBsNYwDE", "LTWPbMSUd8w", "ZWzYBwXkkiE", "WjZG-dNlCvY", "n4JhdnoKHfw", 
+				"Jal0PQaa-js", "nfVEV9sRm7E", "jf4nThIYyY0", "xwqyT5ZQjaM", "odzFdAw_ejE", "6mY7rsm0TCY", "xzhpp-ZAg4M", "i2aczbb8fh0", 
+				"18f5BsCnW_8", "_G2C1V6ejN8")).build());
 	}
 
 	@Deprecated
@@ -151,10 +186,11 @@ public class VideoService {
 		if(meta == null)
 			throw new RuntimeException("No tiene metadata");
 
+		Set<String> exceptions = meta.getExceptions() != null ? new HashSet<>(meta.getExceptions()) : new HashSet<>();
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", StandardCharsets.UTF_8.name())) {
 			if(meta.isGroupingBy()) {
 				Map<String, List<SubtitleVo>> res = new LinkedHashMap<>();
-				processSubtitles(path, meta).stream().sorted().forEach(o -> {
+				processSubtitles(path, meta).stream().filter(i -> !exceptions.contains(i.getUrl())).sorted().forEach(o -> {
 					res.computeIfAbsent(meta.title(o.getTitulo()), k -> new ArrayList<>()).add(o);
 				});
 
@@ -172,7 +208,7 @@ public class VideoService {
 				}
 			} else {
 				cont = 1;
-				processSubtitles(path, meta).stream().sorted().forEach(o -> {
+				processSubtitles(path, meta).stream().filter(i -> !exceptions.contains(i.getUrl())).sorted().forEach(o -> {
 					String url = "https://www.youtube.com/watch?v=" + o.getUrl(); // fileName.substring(fileName.lastIndexOf("-") + 1, fileName.length() - 4);
 
 					String title = meta.getTitleKey() != null ? meta.getTitle() + " " + (cont++) + ". " + 

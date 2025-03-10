@@ -25,9 +25,10 @@ import com.concordance.services.vo.AutorVo;
 import com.concordance.services.vo.Book;
 import com.concordance.services.vo.BookMetadata;
 import com.concordance.services.vo.ContentVo;
+import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.Paragraph;
 import com.concordance.services.vo.RecordVo;
-import com.concordance.services.vo.ItemVo;
+import com.concordance.services.vo.bible.NoteBibleVo;
 
 public class AutoresService {
 
@@ -245,7 +246,7 @@ public class AutoresService {
 			.indexTitle(-1)
 			.chapter(true).verses(false)
 			.regexChapter("^(MENSAJE).*$").regexVerses(null)
-			.chapterKey(".").verseKey("").joiningKey("\n").build());
+			.chapterKey(null).verseKey("").joiningKey("\n").build());
 		complex.put("Baruc Korman - Estudios", BookMetadata.builder().keySplit("^(EXPOSICION).*")
 			.indexTitle(-1)
 			.chapter(true).verses(false)
@@ -459,14 +460,15 @@ public class AutoresService {
 		}
 	}
 
-	public static int bookId(String name, String parent, String base) throws SQLException, IOException {
+	public static int bookId(String name, String parent, String autor, String base) throws SQLException, IOException {
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select id from book where parent = '%s' and name = '%s'", parent, name);
+			String sql = String.format("select id from book where parent = '%s' and name = '%s' and autor = '%s'", parent, name, autor);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
-				result.next();
-				return result.getInt(1);
+				if(result.next())
+					return result.getInt(1);
+				else throw new RuntimeException("No existe id de libro");
 			}
 		}
 	}
@@ -507,7 +509,7 @@ public class AutoresService {
 	public static boolean existBook(String name, String parent, String autor, String base) throws SQLException {
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select count(*) from book where parent = '%s' and name = '%s' and autor = '%s", parent, name, autor);
+			String sql = String.format("select count(*) from book where parent = '%s' and name = '%s' and autor = '%s'", parent, name, autor);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				if(result.next()) {
@@ -579,23 +581,54 @@ public class AutoresService {
 		return res;
 	}
 
-	public static void createNotes(List<String> notes, int book, String base) throws SQLException {
-		String sql = "insert into notes (id, book_id, text) values (?, ?, ?)";
+	public static void createNotes2(List<NoteBibleVo> notes, String base) throws SQLException {
+		String sql = "insert into notes (id, book_id, text, chapter) values (?, ?, ?, ?)";
 		try (Connection conn = db.connection(base)) {
+			conn.setAutoCommit(false);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				int z = max("notes", base) + 1;
-				for (String o : notes) {
-					if(TextUtils.isEmpty(o)) continue;
-
-					if(o.contains("Notas")) continue;
-					
+				int i = 0;
+				for (NoteBibleVo o : notes) {
 					st.setInt(1, z++);
-					st.setInt(2, book);
-					st.setString(3, o);
+					st.setInt(2, o.getBookId());
+					st.setString(3, o.getText());
+					st.setInt(4, o.getChapterId());
 					
 					st.addBatch();
+					if(i%5000 == 0)
+                        st.executeBatch();
+                    
+                    i++;
 				}
 				st.executeBatch();
+				conn.commit();
+			}
+		}
+	}
+
+	public static void createNotes(List<NoteBibleVo> notes, String base) throws SQLException {
+		String sql = "insert into notes (id, book_id, text, chapter, verse, type) values (?, ?, ?, ?, ?, ?)";
+		try (Connection conn = db.connection(base)) {
+			conn.setAutoCommit(false);
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				int z = max("notes", base) + 1;
+				int i = 0;
+				for (NoteBibleVo o : notes) {
+					st.setInt(1, z++);
+					st.setInt(2, o.getBookId());
+					st.setString(3, o.getText());
+					st.setInt(4, o.getChapterId());
+					st.setInt(5, o.getVerse());
+					st.setInt(6, o.getType());
+					
+					st.addBatch();
+					if(i%5000 == 0)
+                        st.executeBatch();
+                    
+                    i++;
+				}
+				st.executeBatch();
+				conn.commit();
 			}
 		}
 	}
@@ -662,7 +695,7 @@ public class AutoresService {
 				conn.setAutoCommit(false);
 				if(exist) {
 					System.out.println("Actualizando: " + b.getParent() + ": " + b.getName() + " " + (cont++) + " de " + total);
-					b.setId(bookId(b.getName(), b.getParent(), base));
+					b.setId(bookId(b.getName(), b.getParent(), b.getAutor(), base));
 					deleteVerses(b.getId(), base);
 					deleteChapters(b.getId(), base);
 				} else {

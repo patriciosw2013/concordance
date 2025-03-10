@@ -3,6 +3,7 @@ package com.concordance.services.util;
 import java.io.PrintWriter;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,33 @@ public class TextUtils {
         sinTildes = sinTildes.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 
         return sinTildes;
+    }
+
+	public static List<String> segmentos(String in, String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(in);
+		List<String> segs = new ArrayList<>();
+        if (matcher.matches()) {
+			System.out.println("cumple");
+			for(int i = 1; i < matcher.groupCount(); i++) {
+				segs.add(matcher.group(i));
+			}
+        }
+
+		return segs;
+	}
+
+	public static String lpad(String input, String relleno) {
+        if (input != null && input.length() < 2) {
+            return relleno + input;
+        }
+        return input;
+    }
+
+	public static String eliminarLineasBlancas(String input) {
+        return Arrays.stream(input.split("\n"))
+                .filter(linea -> !linea.trim().isEmpty())
+                .collect(Collectors.joining("\n"));
     }
 
 	public static String textBetween(String str, String lim1, String lim2) {

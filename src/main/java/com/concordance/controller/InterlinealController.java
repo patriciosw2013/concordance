@@ -17,7 +17,7 @@ import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.interlineal.InterlinealVo;
 import com.concordance.services.vo.interlineal.NotationDetailVo;
-import com.concordance.services.vo.interlineal.StrongVo;
+import com.concordance.services.vo.interlineal.StrongDetailVo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +30,7 @@ public class InterlinealController implements Serializable {
 
     private String input;
     private String reference;
-    private StrongVo strong;
+    private StrongDetailVo strong;
     private CitaVo cita;
     private int testamentId;
     private String base;

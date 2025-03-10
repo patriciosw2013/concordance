@@ -4,19 +4,17 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import com.concordance.services.util.AutoresUtil;
 import com.concordance.services.util.BibleUtil;
 import com.concordance.services.util.NotesUtil;
-import com.concordance.services.util.PatristicaUtil;
 import com.concordance.services.util.TextUtils;
 import com.concordance.services.vo.AutorVo;
 import com.concordance.services.vo.Book;
 import com.concordance.services.vo.ContentVo;
+import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.ResultsVo;
-import com.concordance.services.vo.ItemVo;
 
 public class ConcordanceService {
 
@@ -36,10 +34,8 @@ public class ConcordanceService {
 
     public static List<RecordVo> concordance(String in, String base, boolean highlight) {
         try {
-            if("Patristica".equals(base)) {
-                return PatristicaUtil.concordancia(in, base, highlight);
-            } else if("Autores".equals(base)) {
-                return AutoresUtil.concordancia(in, base, highlight);
+            if("Patristica".equals(base) || "Autores".equals(base)) {
+                return AutoresService.concordancia(in, base, highlight);
             } else if("Notas".equals(base)) { 
                 return NotesUtil.concordancia(in, base, highlight);
             } else {
@@ -59,8 +55,8 @@ public class ConcordanceService {
         RecordVo r = null;
         String notes = null;
         List<ItemVo> chapters = null;
-        if("Patristica".equals(base) || "Autores".equals(base)) {
-            try {
+        try {
+            if("Patristica".equals(base) || "Autores".equals(base)) {
                 b = AutoresService.bookForVerse(verseId, base);
                 r = AutoresService.verse(verseId, base);
                 contents = AutoresService.readContents(b.getId(), r.getChapterId(), base);
@@ -69,26 +65,21 @@ public class ConcordanceService {
                 label = formatLabel(TextUtils.value(b.getAutor(), "Anonimo") + ", " + b.getParent() + " " + b.getName() + ": " + 
                     (TextUtils.isEmpty(b.getTitle()) ? " " : b.getTitle().length() < 60 ? b.getTitle().concat(" ") : " ") + 
                     r.getChapter());  
-            } catch (SQLException | IOException e1) {
-                e1.printStackTrace();
-            }
-        } else if("Notas".equals(base)) {
-            try {
+            } else if("Notas".equals(base)) {
                 b = NotesUtil.book(verseId, base);
                 contents = AutoresUtil.readContents(b.getId(), 0, base);
                 label = b.getAutor() + ", " + b.getParent() + " " + b.getName() + ": " + 
                     (TextUtils.isEmpty(b.getTitle()) ? " " : b.getTitle().length() < 60 ? b.getTitle().concat(" ") : " ");
-            } catch (SQLException | IOException e1) {
-                e1.printStackTrace();
-            }
-        } else {
-            try {
+            } else {
                 b = BibleUtil.bookForVerse(verseId, base);
+                r = BibleUtil.verse(verseId, base);
                 contents = BibleUtil.readContentsForVerse(verseId, base);
+                notes = BibleUtil.readNotes(b.getId(), r.getChapterId(), base);
+                System.out.println(notes);
                 label = b.getName() + ": " + contents.getChapter();
-            } catch (Exception e1) {
-                e1.printStackTrace();
             }
+        } catch (SQLException | IOException e1) {
+            e1.printStackTrace();
         }
 
         if(highlight) {
@@ -107,8 +98,8 @@ public class ConcordanceService {
         String label = null;
         String notes = null;
         List<ItemVo> chapters = null;
-        if("Patristica".equals(base) || "Autores".equals(base)) {
-            try {
+        try {
+            if("Patristica".equals(base) || "Autores".equals(base)) {
                 b = AutoresService.book(bookId, base);
                 chapters = AutoresService.chapters(bookId, base);
                 int chapterId = chapters.isEmpty() ? 0 : chapters.get(0).getCodigo();
@@ -118,19 +109,16 @@ public class ConcordanceService {
                     (TextUtils.isEmpty(b.getTitle()) ? " " : b.getTitle().length() < 110 ? b.getTitle().concat(" ") : " ") +
                     TextUtils.value(contents.getChapter(), "");
                 label = formatLabel(label);
-            } catch (SQLException | IOException e1) {
-                e1.printStackTrace();
-            }
-        } else {
-            try {
+            } else {
                 b = BibleUtil.book(bookId, base);
                 chapters = BibleUtil.chapters(bookId, base);
                 int chapterId = chapters.get(0).getCodigo();
                 contents = BibleUtil.readContents(bookId, chapter == 0 ? chapterId : chapter, base);
+                notes = BibleUtil.readNotes(bookId, chapterId, base);
                 label = b.getName() + ": " + contents.getChapter();
-            } catch (Exception e1) {
-                e1.printStackTrace();
             }
+        } catch (Exception e1) {
+            e1.printStackTrace();
         }
 
         contents.setChapter(label);
@@ -166,13 +154,7 @@ public class ConcordanceService {
 
     public static void main(String[] args) {
         try {
-            List<AutorVo> obras = obras("Patristica");
-            for (AutorVo o : obras) {
-                System.out.println(o.getAutor());
-                for(Entry<String, List<ItemVo>> x: o.getBooks().entrySet()) {
-                    System.out.println(x.getKey() + ": " + x.getValue());
-                }
-            }
+            readContentsForVerse(23146,"RVR1960", "", false);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -107,8 +107,8 @@ public class AutoresUtil extends AutoresService {
     public static void main(String[] args) {
         try {
 			String base = "Autores";
-			for(String name : Arrays.asList("Fabian Liendo - Predicas"))
-            	read("D:\\Libros\\" + name + ".docx", base, false);
+			for(String name : Arrays.asList("Fabian Liendo - Predicas", "Baruc Korman - Estudios", "Charles Stanley - Mensajes"))
+            	read("D:\\Libros\\" + name + ".docx", base, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
