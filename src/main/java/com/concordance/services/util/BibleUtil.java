@@ -1,11 +1,7 @@
 package com.concordance.services.util;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,8 +25,6 @@ import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.TextExtractedVo;
 import com.concordance.services.vo.Verse;
-import com.concordance.services.vo.bible.BibleBook;
-import com.concordance.services.vo.bible.BookRefVo;
 import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.bible.NoteBibleVo;
 
@@ -161,110 +155,6 @@ public class BibleUtil implements Serializable {
 			verses.add(new Verse(chapter, verse++, o));
 		}
 		return verses;
-	}
-	
-	public static void read(String folder) throws SQLException, IOException {
-		String base = "D:\\workspace\\bible\\src\\main\\resources\\db\\DHH.sqlite";
-		for(File file : new File(folder).listFiles()) {
-			if(!file.getName().endsWith(".txt"))
-				continue;
-			
-			List<String> res = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-			String txt = res.stream().collect(Collectors.joining(" "));
-			List<String> chp = Arrays.asList(txt.split("[0-9]+:1 ")).stream().filter(i -> i.length() > 0).collect(Collectors.toList());
-			
-			String name = file.getName().replace(".txt", "");
-			String[] metadata = name.split("-");
-			
-			BibleBook b = new BibleBook();
-			b.setKey(Integer.parseInt(metadata[0]));
-			b.setAbbr(metadata[1]);
-			b.setTitle(metadata[2]);
-			b.setTestament(Integer.parseInt(metadata[3]));
-			b.setVerses(new ArrayList<Verse>());
-			System.out.println(String.format("Lib: %s # capitulos: %s", b.toString(), chp.size()));
-			
-			int i = 1;
-			int j = 1;
-			for(String z: chp) {
-				System.out.println("Cap. " + i);
-				String[] w = z.split("[0-9]+ (.*?)");
-				for(String u:w) {
-					b.getVerses().add(new Verse(i, j, u));
-					System.out.println(j + " " + u);
-					j++;
-				}
-				
-				System.out.println();
-				j = 1;
-				i++;
-			}
-			
-			try (Connection conn = db.connection(base)) {
-				String sql = "delete from verse where book_id = " + b.getKey();
-				try (PreparedStatement st = conn.prepareStatement(sql)) {
-					st.execute();
-				}
-				
-				sql = String.format("delete from book where id = '%s'", b.getKey());
-				try (PreparedStatement st = conn.prepareStatement(sql)) {
-					st.execute();
-				}
-				
-				int z = max("verse", base) + 1;
-				sql = "insert into book (id, testament_id, name, abbreviation) values (?, ?, ?, ?)";
-				try (PreparedStatement st = conn.prepareStatement(sql)) {
-					st.setInt(1, b.getKey());
-					st.setInt(2, b.getTestament());
-					st.setString(3, b.getTitle());
-					st.setString(4, b.getAbbr());
-					
-					st.executeUpdate();
-				}
-				
-				sql = "insert into verse (id, book_id, chapter, verse, text) values (?, ?, ?, ?, ?)";
-				try (PreparedStatement st = conn.prepareStatement(sql)) {
-					for (Verse o : b.getVerses()) {
-						st.setInt(1, z++);
-						st.setInt(2, b.getKey());
-						st.setInt(3, o.getChapter());
-						st.setInt(4, o.getVerse());
-						st.setString(5, o.getText());
-						
-						st.addBatch();
-					}
-					st.executeBatch();
-				}
-			}
-		}
-		
-		System.out.println("Insercion exitosa");
-	}
-
-	public static void createVerses(List<RecordVo> verses, String base) throws SQLException {
-		try (Connection conn = db.connection(base)) {
-			conn.setAutoCommit(false);
-			int z = max("verse", base) + 1;
-			String sql = "insert into verse (id, book_id, chapter, verse, text) values (?, ?, ?, ?, ?)";
-			int i = 0;
-			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				for (RecordVo o : verses) {
-					st.setInt(1, z++);
-					st.setInt(2, o.getBookId());
-					st.setInt(3, o.getChapterId());
-					st.setInt(4, o.getVerse());
-					st.setString(5, o.getText());
-					
-					st.addBatch();
-					if(i%5000 == 0)
-					st.executeBatch();
-				
-					i++;
-				}
-				st.executeBatch();
-				conn.commit();
-			}
-		}
 	}
 	
 	public static int max(String table, String base) throws SQLException {
@@ -400,29 +290,6 @@ public class BibleUtil implements Serializable {
 		}
 	}
 
-	public static ContentVo readContents(int bookId, int chapter, String base) throws SQLException, IOException {
-		if(bookId == 0)
-			return null;
-		
-		List<String> res = new ArrayList<>();
-		ResultSet result = null;
-		int chp = 0;
-		try (Connection conn = db.connection(base)) {
-			String sql = "select v.chapter, v.verse || ' ' || trim(v.text) "
-					+ "from verse v where v.book_id = " + bookId +
-					(chapter > 0 ? " and v.chapter = " + chapter : "");
-			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				result = st.executeQuery();
-				while(result.next()) {
-					chp = result.getInt(1);
-					res.add(result.getString(2));
-				}
-			}
-		}
-		
-		return new ContentVo(chp, String.valueOf(chp), res);
-	}
-
 	public static List<ItemVo> booksList(int testament, String base) throws SQLException, IOException {
 		List<ItemVo> res = new ArrayList<>();
 		ResultSet result = null;
@@ -450,6 +317,21 @@ public class BibleUtil implements Serializable {
 				result = st.executeQuery();
 				while(result.next()) {
 					res.add(new ItemVo(result.getInt(1), result.getString(2)));
+				}
+			}
+		}
+		return res;
+	}
+
+	public static List<Integer> chaptersIds(int bookId, String base) throws SQLException, IOException {
+		List<Integer> res = new ArrayList<>();
+		ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select c.chapter from chapter c where c.book_id = " + bookId;
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				result = st.executeQuery();
+				while(result.next()) {
+					res.add(result.getInt(1));
 				}
 			}
 		}
@@ -537,6 +419,29 @@ public class BibleUtil implements Serializable {
 		
 		return res;
 	}
+
+	public static ContentVo readContents(int bookId, int chapter, String base) throws SQLException, IOException {
+		if(bookId == 0)
+			return null;
+		
+		List<String> res = new ArrayList<>();
+		ResultSet result = null;
+		int chp = 0;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select v.chapter, v.verse || ' ' || trim(v.text) "
+					+ "from verse v where v.book_id = " + bookId +
+					(chapter > 0 ? " and v.chapter = " + chapter : "");
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				result = st.executeQuery();
+				while(result.next()) {
+					chp = result.getInt(1);
+					res.add(result.getString(2));
+				}
+			}
+		}
+		
+		return new ContentVo(chp, String.valueOf(chp), res);
+	}
 	
 	public static ContentVo readContentsForVerse(int verseId, String base) throws SQLException, IOException {
 		if(verseId == 0)
@@ -546,9 +451,11 @@ public class BibleUtil implements Serializable {
 		ResultSet result = null;
 		int chp = 0;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select v.chapter, v.verse || ' ' || trim(v.text) "
+			/*String sql = String.format("select v.chapter, v.verse || ' ' || trim(v.text) "
 					+ "from verse v where v.book_id in (select x.book_id from verse x where x.id = %s) " 
-					+ "and v.chapter in (select x.chapter from verse x where x.id = %s)", verseId, verseId);
+					+ "and v.chapter in (select x.chapter from verse x where x.id = %s)", verseId, verseId);*/
+			String sql = String.format("select b.chapter, b.verse || ' ' || trim(b.text) from book a inner join verse b on (a.id = b.book_id) " + 
+				"where (a.id, b.chapter) = (select x.book_id, x.chapter from verse x where x.id = %s)", verseId);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				while(result.next()) {
@@ -598,149 +505,5 @@ public class BibleUtil implements Serializable {
 		}
 		
 		return res;
-	}
-
-	public static void importNotesBibleGateway() throws IOException {
-		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
-			ListUtils.split(Files.readAllLines(new File("D:\\Desarrollo\\1960gateway.txt").toPath(), 
-				StandardCharsets.UTF_8), ">>>>>>").stream().forEach(res -> {
-				BookRefVo z = new BookRefVo();
-				z.setRef(res.get(0));
-				writer.println(">>>>>>" + res.get(0));
-				Map<String, List<String>> sum = new LinkedHashMap<>();
-				sum.put("verses", new ArrayList<>());
-				sum.put("Footnotes", new ArrayList<>());
-				sum.put("Cross references", new ArrayList<>());
-				List<String> aux = sum.get("verses");
-				for(int i = 1; i < res.size(); i++) {
-					String line = res.get(i).trim();
-					if(line.equals("Footnotes")) {
-						aux = sum.get("Footnotes");
-					} else if(line.equals("Cross references")) {
-						aux = sum.get("Cross references");
-					}
-
-					aux.add(line);
-				}
-
-				for(String c : sum.get("Footnotes"))
-					writer.println(c);
-				for(String c : sum.get("Cross references"))
-					writer.println(c);
-			});
-		}
-	}
-
-	public static void loadBible(String base) throws SQLException, IOException {
-		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
-		try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
-			for(int testId : new int[]{1, 2}) {
-				for(ItemVo b : BibleUtil.booksList(testId, "RVR1960")) {
-					//if(b.getCodigo() != 40) continue;
-					for(ItemVo c : BibleUtil.chapters(b.getCodigo(), "RVR1960")) {
-						String url = String.format("https://www.biblegateway.com/passage/?search=%s&version=%s", 
-							TextUtils.quitarAcentos(b.getValor()).concat(" ").replaceAll(" ", "%20")
-							.concat(c.getCodigo() + ""), base);
-						System.out.println(url);
-						String txt = WebUtil.leerPaginaWeb(url);
-						//writer.println(txt);
-						txt = txt.substring(txt.indexOf("result-text-style-normal text-html\">") + 36);
-						txt = txt.substring(0, txt.indexOf("<div class=\"passage-scroller no-sidebar\">"));
-						writer.println(">>>>>>");
-						writer.println(b.getValor() + " " + c.getCodigo());
-						writer.println(txt);
-						//break;
-					}
-					//break;
-				}
-				//break;
-			}
-		}
-	}
-
-	public static void importBookBibleGateway(String base) throws SQLException, IOException {
-		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
-		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
-			ListUtils.split(Files.readAllLines(new File(fileHtml).toPath(), 
-				StandardCharsets.UTF_8), ">>>>>>").stream().forEach(res -> {
-				writer.println(">>>>>>" + res.get(0));
-				for(int i = 0; i < res.size(); i++) {
-					String g = res.get(i);
-					if(g.contains("</sup>") || g.contains("chapternum"))
-						writer.println(WebUtil.formatHtml(g));
-					if(g.contains("verse line")) {
-						writer.println(" " + WebUtil.formatHtml(res.get(i + 1)));
-						i++;
-					}
-				}
-			});
-		}
-
-		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
-			String regex = "(\\d+)\\s*(.*)";  // captura el número de verso y el texto
-			Pattern pattern = Pattern.compile(regex);
-			List<RecordVo> versiculos = new ArrayList<>();
-			StringBuilder textoVerso = new StringBuilder();
-			int numeroVerso = -1;
-			int bookId = 0, chapter = 0;
-			int verse = 1;
-			List<String> auxbk = null;
-			List<List<String>> bks = new ArrayList<>();
-			for (String linea : Files.readAllLines(new File("D:\\Desarrollo\\versPrev.txt").toPath(), 
-				StandardCharsets.UTF_8)) {
-				if(linea.startsWith(">>>>>>")) {
-					auxbk = new ArrayList<>();
-					bks.add(auxbk);
-				}
-
-				auxbk.add(linea);
-			}
-
-			for(List<String> h : bks) {
-				for (String linea : h) {
-					if(linea.startsWith(">>>>>>")) {
-						bookId = BibleUtil.bookId(linea.substring(6, linea.lastIndexOf(" ")), base);
-						chapter = Integer.parseInt(linea.substring(linea.lastIndexOf(" ") + 1));
-						verse = 1;
-						continue;
-					}
-					Matcher matcher = pattern.matcher(linea);
-					if (matcher.matches()) {
-						if (numeroVerso != -1) {
-							versiculos.add(new RecordVo(bookId, 0, chapter, null, verse++, 
-								textoVerso.toString().replace(" ", "").trim()));
-						}
-						
-						numeroVerso = Integer.parseInt(matcher.group(1));
-						textoVerso = new StringBuilder(matcher.group(2));
-					} else {
-						if (numeroVerso != -1) {
-							textoVerso.append("\n").append(linea.replace(" ", "").trim());
-						}
-					}
-				}
-
-				if (numeroVerso != -1) {
-					versiculos.add(new RecordVo(bookId, 0, chapter, null, verse, 
-						textoVerso.toString().replace(" ", "").trim()));
-				}
-				numeroVerso = -1;
-			}
-
-			createVerses(versiculos, base);
-			for (RecordVo versiculo : versiculos) {
-				writer.println(versiculo);
-			}
-		}
-	}
-	
-	public static void main(String[] args) {
-		try {
-			//read("D:\\Desarrollo\\books");
-			loadBible("NBLA");
-			//importBookBibleGateway("NBLA");
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

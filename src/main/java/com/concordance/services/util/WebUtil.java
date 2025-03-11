@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import com.concordance.services.vo.ItemVo;
 
@@ -53,16 +54,15 @@ public class WebUtil {
         }
     }
 
-    //"https://www.sobicain.org/it/biblewebapp/?bid=1&bk=41&cp=3";
-    //String title = txt.substring(0, txt.indexOf(" - "));
-    //System.out.println(title);
-    //txt = txt.substring(txt.indexOf("MujerLatinoamericana Mujer") + 26);
-    //txt = txt.substring(0, txt.indexOf("Mostrar Biblia Interlineal"));
-    //txt = TextUtils.quitarSaltosDeLinea(txt);
-
-    public static String leerPaginaWeb(String urlString) throws IOException {
+    public static String readHTML(String urlString) throws IOException {
         Document doc = Jsoup.connect(urlString).get();
-        return doc.html(); // Jsoup.parse(doc.html()).wholeText();
+        return doc.html();
+    }
+
+    public static String readWeb(String url, String tag, boolean pretty) throws IOException {
+        Document document = Jsoup.parse(readHTML(url));
+        Element div = document.select(tag).first();
+        return pretty ? div.outerHtml() : div.html();
     }
 
     public static String formatHtml(String in) {
@@ -71,7 +71,7 @@ public class WebUtil {
 
     public static void main(String[] args) {
         try {
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }

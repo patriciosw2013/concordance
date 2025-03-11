@@ -19,6 +19,12 @@ parent VARCHAR(100), title varchar(300), autor varchar(100), PRIMARY KEY (id));
 
 CREATE TABLE chapter (id INTEGER NOT NULL, book_id INTEGER, name text, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
 
+CREATE INDEX "ix_verse_cons" ON "verse" (
+	"book_id",
+	"chapter",
+	"verse"
+);
+
 CREATE TABLE verse (id integer NOT NULL primary key, 
 book_id INTEGER, chapter_id integer, verse integer, text TEXT, FOREIGN KEY(book_id) REFERENCES book (id));
 
@@ -39,6 +45,8 @@ alter table book add column bookDate varchar(70);
 alter table book add column abb text;
 alter table verse add column chapter varchar(100);
 alter table verse add column chapter_id integer;
+
+CREATE TABLE chapter (id INTEGER NOT NULL, book_id INTEGER, chapter integer, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
 
 CREATE TABLE "autor" (
 	"id"	INTEGER,

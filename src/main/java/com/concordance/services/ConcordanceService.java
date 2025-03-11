@@ -24,7 +24,9 @@ public class ConcordanceService {
 		vr.add("NTV");
 		vr.add("NVI");
 		vr.add("TLA");
+        vr.add("Latinoamericana");
         vr.add("DHH");
+        vr.add("Vulgata");
 		vr.add("Patristica");
         vr.add("Autores");
         vr.add("Notas");
