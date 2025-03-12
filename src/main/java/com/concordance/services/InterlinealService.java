@@ -26,11 +26,13 @@ import com.concordance.services.util.WebUtil;
 import com.concordance.services.vo.ChapterVo;
 import com.concordance.services.vo.ItemStringVo;
 import com.concordance.services.vo.ItemVo;
+import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.interlineal.InterlinealVo;
 import com.concordance.services.vo.interlineal.NotationDetailVo;
 import com.concordance.services.vo.interlineal.NotationVo;
 import com.concordance.services.vo.interlineal.StrongDetailVo;
+import com.concordance.services.vo.interlineal.StrongReferenceVo;
 import com.concordance.services.vo.interlineal.StrongVo;
 
 public class InterlinealService {
@@ -42,11 +44,12 @@ public class InterlinealService {
         List<InterlinealVo> res = new ArrayList<>();
         ResultSet result = null;
         try (Connection conn = db.connection("Interlineal")) {
-            String sql = String.format("select i.chapter, i.verse, i.strong_id, i.word, i.type, i.meaning, i.book_id, v.testament_id " +
-                "from book v inner join interlineal i on (v.id = i.book_id) where v.id = %s " +
-                "and i.chapter = %s and i.verse = %s",
-                book, chapter, verse);
+            String sql = "select i.chapter, i.verse, i.strong_id, i.word, i.type, i.meaning, i.book_id, v.testament_id " +
+                "from interlineal i inner join book v on (i.book_id = v.id) where i.book_id = ? and i.chapter = ? and i.verse = ?";
             try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setInt(1, book);
+                st.setInt(2, chapter);
+                st.setInt(3, verse);
                 result = st.executeQuery();
                 while(result.next()) {
                     InterlinealVo b = new InterlinealVo();
@@ -65,6 +68,28 @@ public class InterlinealService {
         }
         
         return res;
+    }
+
+    public static String simpleInterlineal(int verseId) throws SQLException {
+        RecordVo c = BibleUtil.verse(verseId, "RVR1960");
+        ResultSet result = null;
+        List<ItemStringVo> res = new ArrayList<>();
+        try (Connection conn = db.connection("Interlineal")) {
+            String sql = "select i.word, i.meaning from interlineal i where i.book_id = ? and i.chapter = ? and i.verse = ?";
+            try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setInt(1, c.getBookId());
+                st.setInt(2, c.getChapterId());
+                st.setInt(3, c.getVerse());
+                result = st.executeQuery();
+                while(result.next()) {
+                    res.add(new ItemStringVo(result.getString(1), result.getString(2)));
+                }
+            }
+        }
+
+        return res.stream()
+            .map(i -> String.format("<span style=\"font-weight: bold; color: #007ad9;\">%s</span> <span style=\"color: #d9534f;\">(%s)</span>", i.getCodigo(), i.getValor()))
+            .collect(Collectors.joining(" "));
     }
 
     public static void createInterlineal(List<InterlinealVo> process) throws SQLException, IOException {
@@ -143,11 +168,11 @@ public class InterlinealService {
         return refs;
     }
 
-    public static List<ItemStringVo> strongReference(int strongId, int testamentId, String baseVerse) throws SQLException, IOException {
+    public static List<StrongReferenceVo> strongReference(int strongId, int testamentId, String baseVerse) throws SQLException, IOException {
         if(strongId == 0)
             return new ArrayList<>();
 
-        List<ItemStringVo> res = new ArrayList<>();
+        List<StrongReferenceVo> res = new ArrayList<>();
         ResultSet result = null;
         try (Connection conn = db.connection(base)) {
             String sql = String.format("attach database '%s' as db2", SQLUtil.bases.get(baseVerse));
@@ -156,23 +181,21 @@ public class InterlinealService {
             }
 
             sql = String.format("select i.chapter, i.verse, i.strong_id, i.word, i.type, i.meaning, i.book_id, " +
-                "trim(v.text) || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' %s)' " +
+                "trim(v.text) || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' %s)', v.id " +
                 "from interlineal i inner join db2.book a on (i.book_id = a.id) inner join db2.verse v on (a.id = v.book_id) " +
                 "where i.strong_Id = %s and a.testament_id = %s and v.chapter = i.chapter and v.verse = i.verse ", 
                 baseVerse, strongId, testamentId);
             try (PreparedStatement st = conn.prepareStatement(sql)) {
                 result = st.executeQuery();
                 while (result.next()) {
-                    InterlinealVo b = new InterlinealVo();
-                    b.setChapter(result.getInt(1));
-                    b.setVerse(result.getInt(2));
+                    StrongReferenceVo b = new StrongReferenceVo();
+                    b.setVerseId(result.getInt(9));
                     b.setStrongId(result.getInt(3));
                     b.setWord(result.getString(4));
                     b.setType(result.getString(5));
                     b.setMeaning(result.getString(6));
-                    b.setBookId(result.getInt(7));
-
-                    res.add(new ItemStringVo(b.txt(), result.getString(8)));
+                    b.setReference(result.getString(8));
+                    res.add(b);
                 }
             }
         }
@@ -239,7 +262,7 @@ public class InterlinealService {
                                 res.addAll(procesarTexto(b.getCodigo(), o.getChapterId(), v, txt));
                             });
                         });
-                    } catch (SQLException | IOException e) {
+                    } catch (SQLException e) {
                         e.printStackTrace();
                     }
                 });

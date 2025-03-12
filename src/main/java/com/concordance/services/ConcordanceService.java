@@ -15,10 +15,20 @@ import com.concordance.services.vo.ContentVo;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.ResultsVo;
+import com.concordance.services.vo.bible.CitaVo;
 
 public class ConcordanceService {
 
     public static List<String> bases() {
+        List<String> vr = new ArrayList<>(basesBible());
+		vr.add("Patristica");
+        vr.add("Autores");
+        vr.add("Notas");
+
+        return vr;
+    }
+
+    public static List<String> basesBible() {
         List<String> vr = new ArrayList<>();
         vr.add("RVR1960");
 		vr.add("NTV");
@@ -27,9 +37,6 @@ public class ConcordanceService {
         vr.add("Latinoamericana");
         vr.add("DHH");
         vr.add("Vulgata");
-		vr.add("Patristica");
-        vr.add("Autores");
-        vr.add("Notas");
 
         return vr;
     }
@@ -123,6 +130,28 @@ public class ConcordanceService {
             e1.printStackTrace();
         }
 
+        contents.setChapter(label);
+        return new ResultsVo(b, contents, notes, chapters);
+    }
+
+    public static ResultsVo readContents(CitaVo in) {
+        ContentVo contents = null;
+        Book b = new Book();
+        int bookId = in.getBookId();
+        String base = in.getVersion();
+        String label = null;
+        String notes = null;
+        List<ItemVo> chapters = null;
+        try {
+            b = BibleUtil.book(bookId, base);
+            chapters = BibleUtil.chapters(bookId, base);
+            contents = BibleUtil.readContents(in);
+            notes = BibleUtil.readNotes(bookId, in.getChapter(), base);
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+
+        label = b.getName() + ": " + contents.getChapter();
         contents.setChapter(label);
         return new ResultsVo(b, contents, notes, chapters);
     }

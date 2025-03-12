@@ -56,9 +56,10 @@ CREATE TABLE "autor" (
 
 insert into autor values (13, 'S. Tomás de Aquino', 'Tomas de Aquino');
 
-CREATE TABLE notes (id integer NOT NULL primary key, 
-book_id INTEGER, text TEXT, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
-alter table notes add column chapter varchar(100);
+CREATE TABLE notes (id integer NOT NULL, 
+book_id INTEGER, chapter integer, text TEXT, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
+alter table notes add column verse integer;
+alter table notes add column type integer;
 
 -- notacion de robinson
 drop table notation;

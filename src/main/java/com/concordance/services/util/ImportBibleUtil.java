@@ -87,8 +87,9 @@ public class ImportBibleUtil {
 		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
 		if(!existHTML) {
 			try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
-				for(int testId : new int[]{2}) {
+				for(int testId : new int[]{1}) {
 					for(ItemVo b : BibleUtil.booksList(testId, base)) {
+						if(b.getCodigo() < 45) continue;
 						for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
 							String url = String.format("https://www.sobicain.org/it/biblewebapp/?bid=1&bk=%s&cp=%s", 
 								b.getCodigo(), c);

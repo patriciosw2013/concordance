@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Consulta de versos</title>
+    <style>
+        .parrafo {
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+        }
+
+        .task-lists {
+            margin: 10px;
+            padding: 10px;
+            padding-top: 5px;
+            font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            color: #282828;
+            background-color: #FFFFFF;
+            text-align: left;
+        }
+		
+		.side-left {
+			width: 675px;
+		}
+		
+		.side-right {
+			width: 675px;
+		}
+
+        .headerGrid {
+            padding-right:15px;
+		}
+
+        .panelRead {
+            width: 675px;
+            height: 520px;
+        }
+
+        .preformatted {
+            white-space: pre-wrap;
+            text-align: left;
+            padding: 10px !important;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            width: 400px;
+        }
+
+        .ui-scrollpanel-hbar {
+            overflow-x: initial;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="updateForm">
+        <p:messages id="messages" showDetail="true" closable="true">
+            <p:autoUpdate />
+        </p:messages>
+        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+            <p:scrollPanel mode="native" id="pnlNotes" style="width: 450px; height: 300px;">
+                <h:outputText value="#{searchController.cita.notes}" styleClass="preformatted" escape="false" />
+            </p:scrollPanel>
+        </p:dialog>
+		<p:dialog id="modalNotesPar" header="Header" widgetVar="dlg2" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+            <p:scrollPanel mode="native" id="pnlNotesPar" style="width: 450px; height: 300px;">
+                <h:outputText value="#{searchController.citaPar.notes}" styleClass="preformatted" escape="false" />
+            </p:scrollPanel>
+        </p:dialog>
+        <div class="task-lists">
+            <h:panelGrid columns="4" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 400px;">
+                <p:inputText id="txt-input" value="#{searchController.input}" />
+
+                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto"
+                    action="#{searchController.search}" update="searchItems,modalNotes,modalNotesPar" />
+            </h:panelGrid>
+            <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 20px;" columnClasses="side-left side-right">
+                <h:panelGrid id="head" columns="3" columnClasses="headerGrid headerGrid headerGrid">
+                    <p:selectOneMenu id="chapters" value="#{searchController.cita.chapter}" rendered="#{not empty searchController.cita.chapters}">
+                        <f:selectItems var="o" value="#{searchController.cita.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}" update="pnl,head,txt-input" process="@this"/>
+                        <f:converter converterId="javax.faces.Integer" />
+                    </p:selectOneMenu>
+                    <p:selectOneMenu id="versions" value="#{searchController.cita.version}">
+                        <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}" update="pnl,head" process="@this"/>
+                    </p:selectOneMenu>
+                    <p:commandButton value="" rendered="#{not empty searchController.cita.notes}" type="button" style="width:35px; height:30px;" update="pnlNotes"
+                        icon="pi pi-bookmark" onclick="PF('dlg1').show()"/>
+                </h:panelGrid>
+
+                <h:panelGrid id="headPar" columns="3" columnClasses="headerGrid headerGrid headerGrid">
+                    <p:selectOneMenu id="chaptersPar" value="#{searchController.citaPar.chapter}" rendered="#{not empty searchController.citaPar.chapters}">
+                        <f:selectItems var="o" value="#{searchController.citaPar.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(2)}" update="pnlPar,headPar,txt-input" process="@this"/>
+                        <f:converter converterId="javax.faces.Integer" />
+                    </p:selectOneMenu>
+                    <p:selectOneMenu id="versionsPar" value="#{searchController.citaPar.version}">
+                        <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(2)}" update="pnlPar,headPar" process="@this"/>
+                    </p:selectOneMenu>
+                    <p:commandButton value="" rendered="#{not empty searchController.citaPar.notes}" type="button" style="width:35px; height:30px;" update="pnlNotesPar"
+                        icon="pi pi-bookmark" onclick="PF('dlg2').show()"/>
+                </h:panelGrid>
+
+                <p:scrollPanel mode="native" id="pnl" styleClass="panelRead">
+					<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <p:commandLink value="&lt;" action="#{searchController.navigate(1, 0)}" update="updateForm:searchItems"/>
+                        <p:commandLink value="&gt;" action="#{searchController.navigate(1, 1)}" update="updateForm:searchItems"/>
+					</div>
+                    <h:outputText value="#{searchController.cita.txt}" styleClass="preformatted" escape="false" />
+                </p:scrollPanel>
+
+                <p:scrollPanel mode="native" id="pnlPar" styleClass="panelRead">
+					<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <p:commandLink value="&lt;" action="#{searchController.navigate(2, 0)}" update="updateForm:searchItems"/>
+                        <p:commandLink value="&gt;" action="#{searchController.navigate(2, 1)}" update="updateForm:searchItems"/>
+					</div>
+                    <h:outputText value="#{searchController.citaPar.txt}" styleClass="preformatted" escape="false" />
+                </p:scrollPanel>
+            </p:panelGrid>
+        </div>
+    </h:form>
+</h:body>
+
+</html>

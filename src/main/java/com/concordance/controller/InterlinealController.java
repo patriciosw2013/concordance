@@ -12,12 +12,12 @@ import javax.inject.Named;
 
 import com.concordance.services.InterlinealService;
 import com.concordance.services.util.BibleUtil;
-import com.concordance.services.vo.ItemStringVo;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.interlineal.InterlinealVo;
 import com.concordance.services.vo.interlineal.NotationDetailVo;
 import com.concordance.services.vo.interlineal.StrongDetailVo;
+import com.concordance.services.vo.interlineal.StrongReferenceVo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,18 +30,18 @@ public class InterlinealController implements Serializable {
 
     private String input;
     private String reference;
+    private String simpleInterlineal;
     private StrongDetailVo strong;
     private CitaVo cita;
     private int testamentId;
-    private String base;
-    private List<ItemVo> chapters;
+    private List<ItemVo> verses;
     private List<InterlinealVo> words;
-    private List<ItemStringVo> references;
+    private List<StrongReferenceVo> references;
     private NotationDetailVo notationDetail;
 
     @PostConstruct
     public void init() {
-        base = "RVR1960";
+
     }
 
     public void evaluate() {
@@ -53,8 +53,9 @@ public class InterlinealController implements Serializable {
                 return;
             }
 
-            testamentId = BibleUtil.testamentId(cita.getBookId(), base);
-            chapters = BibleUtil.chapters(cita.getBookId(), base);
+            System.out.println(cita.cita());
+            testamentId = BibleUtil.testamentId(cita.getBookId(), cita.getVersion());
+            verses = BibleUtil.verses(cita.getBookId(), cita.getChapter(), cita.getVersion());
             search();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -76,7 +77,7 @@ public class InterlinealController implements Serializable {
                     cita.setVerseIni(cita.getVerseIni() - 1);
                 else return;
             } else {
-                if(cita.getVerseIni() < chapters.get(chapters.size() - 1).getCodigo())
+                if(cita.getVerseIni() < verses.get(verses.size() - 1).getCodigo())
                     cita.setVerseIni(cita.getVerseIni() + 1);
                 else return;
             }
@@ -91,7 +92,7 @@ public class InterlinealController implements Serializable {
     public void loadReferences(int strongId) {
         try {
             System.out.println("Cargando referencias strongId: " + strongId);
-            references = InterlinealService.strongReference(strongId, testamentId, base);
+            references = InterlinealService.strongReference(strongId, testamentId, cita.getVersion());
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
@@ -126,6 +127,16 @@ public class InterlinealController implements Serializable {
         try {
             System.out.println("Cargando morfologia: " + code);
             notationDetail = InterlinealService.notationDetail(code, testamentId);
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+            e.printStackTrace();
+        }
+	}
+
+    public void loadSimpleInterlineal(int verseId) {
+        try {
+            simpleInterlineal = InterlinealService.simpleInterlineal(verseId);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));

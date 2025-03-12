@@ -104,6 +104,19 @@
 		.myPanelGrid .ui-panelgrid-row:nth-child(odd) {
 			background-color: #ffffff !important; /* Color de fondo para filas impares */
 		}
+		
+		.azul {
+			color: #007ad9;
+		}
+
+		.azulBold {
+			font-weight: bold;
+			color: #007ad9;
+		}
+
+		.rojo {
+			color: #d9534f;
+		}
     </style>
 </h:head>
 <h:body>
@@ -142,7 +155,6 @@
                     </f:facet>
 					<div class="product-grid-item">
 						<div class="item-id">
-							<i class="pi pi-tag product-category-icon"/>
 							<p:commandLink value="#{o.strongId}" action="#{interlinealController.loadStrong(o.strongId)}" 
                                 update="updateForm:modalStrong"
                                 oncomplete="PF('dlgStr').show()"/>
@@ -170,13 +182,25 @@
                 <f:facet name="header">
                     #{interlinealController.references.size()} usos
                 </f:facet>
-                <p:column headerText="Verso" style="width: 65%;">
-                    <h:outputText value="#{o.valor}" escape="false" style="white-space:pre-line;" />
+                <p:column headerText="Verso" style="width: 68%;">
+                    <h:outputText value="#{o.reference}" escape="false" style="white-space:pre-line;" />
                 </p:column>
-                <p:column headerText="Palabra" style="width: 35%;">
-                    <h:outputText value="#{o.codigo}" escape="false" style="white-space:pre-line;" />
+                <p:column headerText="Palabra" style="width: 32%;">
+					<h:outputText value="#{o.strongId}" styleClass="azul" />
+					<p:commandButton id="lnkSimpleItl" value="" icon="pi pi-tag" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+						action="#{interlinealController.loadSimpleInterlineal(o.verseId)}" style="height:32px;width:32px;margin-left:10px;"
+						update="updateForm:modalSimpleItl" oncomplete="PF('dlgSimpItl').show()"/>
+					<br/>
+					<h:outputText value="#{o.word}" />
+					<br/>
+					<h:outputText value="#{o.type}" styleClass="azulBold" />
+					<br/>
+					<h:outputText value="#{o.meaning}" styleClass="rojo" />
                 </p:column>
             </p:dataTable>
+        </p:dialog>
+		<p:dialog id="modalSimpleItl" header="Texto en el lenguaje original" widgetVar="dlgSimpItl" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
+            <h:outputText value="#{interlinealController.simpleInterlineal}" escape="false" style="white-space:pre-line;" />
         </p:dialog>
         <p:dialog id="modalNot" header="Notacion gramatical" widgetVar="dlgNot" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
             <p:dataTable id="nots" var="o" value="#{interlinealController.notationDetail.detail}" scrollable="true" scrollHeight="350" showGridlines="true"
