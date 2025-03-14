@@ -21,11 +21,13 @@ public class SQLUtil {
 			bases.put("TLA", "D:\\Desarrollo\\databases\\tla.sqlite");
 			bases.put("DHH", "D:\\Desarrollo\\databases\\DHH.sqlite");
 			bases.put("Vulgata", "D:\\Desarrollo\\databases\\vulgata.sqlite");
+			bases.put("LXX", "D:\\Desarrollo\\databases\\LXX.sqlite");
 			bases.put("Latinoamericana", "D:\\Desarrollo\\databases\\Latinoamericana.sqlite");
 			bases.put("NBLA", "D:\\Desarrollo\\databases\\nbla.sqlite");
 			bases.put("Patristica", "D:\\Desarrollo\\databases\\patristica.db");
 			bases.put("Autores", "D:\\Desarrollo\\databases\\Autores.db");
 			bases.put("Notas", "D:\\Desarrollo\\databases\\patristica.db");
+			bases.put("Talmud", "D:\\Desarrollo\\databases\\jewish.db");
 			bases.put("Interlineal", "D:\\Desarrollo\\databases\\interlineal.sqlite");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();

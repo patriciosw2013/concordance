@@ -362,7 +362,7 @@ public class BibleUtil implements Serializable {
 		List<Integer> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select c.chapter from chapter c where c.book_id = " + bookId;
+			String sql = "select distinct c.chapter from chapter c where c.book_id = " + bookId;
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				while(result.next()) {

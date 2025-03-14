@@ -33,7 +33,7 @@ import com.concordance.services.vo.bible.NoteBibleVo;
 public class AutoresService {
 
     protected static SQLUtil db = SQLUtil.getInstance();
-	protected static Map<String, BookMetadata> complex;
+	public static Map<String, BookMetadata> complex;
 
 	static {
 		complex = new HashMap<>();
@@ -181,6 +181,21 @@ public class AutoresService {
 			.chapter(true).verses(true)
 			.regexChapter("^(CAPÍTULO).*$").regexVerses("^\\d+(\\.).*?")
 			.chapterKey(null).verseKey(".").joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Contra dos cartas de los pelagianos", BookMetadata.builder().keySplit("^(LIBRO.*)")
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter("^(Capítulo.*)").regexVerses("^(\\d+)\\..*")
+			.chapterKey(null).verseKey(".").joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Contra Juliano", BookMetadata.builder().keySplit("^(LIBRO.*)")
+			.indexTitle(0)
+			.chapter(true).verses(true)
+			.regexChapter("^([MDCLXVI]+)\\..*").regexVerses("^(\\d+)\\..*")
+			.chapterKey(null).verseKey(null).chpTogether(true).joiningKey("\n").build());
+		complex.put("Rufino de Aquileya - Comentario al símbolo apostólico", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter(null).regexVerses("^(\\d+)\\..*")
+			.chapterKey(null).verseKey(null).joiningKey("\n").build());
 
 		/* Autores */
 		complex.put("Tomas de Kempis - IMITACIÓN DE CRISTO", BookMetadata.builder().keySplit("^(LIBRO).*")
@@ -218,7 +233,7 @@ public class AutoresService {
 		complex.put("Catecismo romano", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
 			.chapter(true).verses(true)
-			.regexChapter("^(PARTE|PRÓLOGO).*$").regexVerses("^\\d+( ).*?")
+			.regexChapter("^((PARTE|PRÓLOGO).*)$").regexVerses("^(\\d+)\\s.*")
 			.chapterKey(null).verseKey(" ").joiningKey("\n").build());
 		complex.put("Articulos de Esmalcalda", BookMetadata.builder().keySplit(null)
 			.indexTitle(0)
@@ -257,6 +272,26 @@ public class AutoresService {
 			.chapter(true).verses(false)
 			.regexChapter("^(MENSAJE).*$").regexVerses(null)
 			.chapterKey(null).verseKey("").joiningKey("\n").build());
+		complex.put("Mishnah", BookMetadata.builder().keySplit("^(DIVISIÓN).*$")
+			.indexTitle(-1)
+			.chapter(true).verses(false)
+			.regexChapter("^(CAPÍTULO).*$").regexVerses(null)
+			.chapterKey(null).verseKey(null).joiningKey("\n").build());
+		complex.put("Talmud", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(false)
+			.regexChapter("^(Talmud|Mishna).*$").regexVerses(null)
+			.chapterKey(null).verseKey(null).joiningKey("\n").build());
+		complex.put("C. S. Lewis - Cartas del diablo a su sobrino", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(false)
+			.regexChapter("^(PREFACIO|[MDCLXVI])+$").regexVerses(null)
+			.chapterKey(null).verseKey(null).joiningKey("\n").build());
+		complex.put("C. S. Lewis - Mero cristianismo", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter("^((LIBRO|PREFACIO).*)").regexVerses("^(\\d+)\\..*")
+			.chapterKey(null).verseKey(null).joiningKey("\n").build());
 	}
     
     public static RecordVo verse(int verseId, String base) throws SQLException, IOException {
@@ -664,14 +699,15 @@ public class AutoresService {
 		String bookName = FilenameUtils.removeExtension(new File(path).getName());
 		System.out.println("Creando libro: " + bookName);
 		BookMetadata meta = complex.get(bookName);
-		List<Book> books = FileUtils.splitDocx(bookName, path, meta);
+		/*List<Book> books = FileUtils.splitDocx(bookName, path, meta);
 		if(meta != null) {
 			if(meta.isChapter())
 				books = FileUtils.chapterText(books, meta);
 			else if(meta.isVerses())
 				books = FileUtils.verseText(books, meta);
-		}
+		}*/
 
+		List<Book> books = FileUtils.processDoc(bookName, path, meta);
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
 			for(Book b : books) {
 				if(b.getTitle() != null && b.getTitle().length() > 100)

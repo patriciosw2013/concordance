@@ -125,6 +125,7 @@ public class NotesUtil extends AutoresService {
 			List<NoteBibleVo> res = new ArrayList<>();
 			int bookId = 0;
 			for(String x : nts) {
+				if(x.trim().isEmpty()) continue;
 				if(x.startsWith(">>")) {
 					String[] key = x.substring(2).split(" - ");
 					String autor = key[0];
@@ -139,7 +140,7 @@ public class NotesUtil extends AutoresService {
 				res.add(new NoteBibleVo(bookId, 0, 0, 0, x));
 			}
 
-			createNotes2(res, "Patristica");
+			createNotes2(res, base);
 			for(NoteBibleVo x: res) {
 				writer.println(x.getBookId() + " " + x.getText());
 			}

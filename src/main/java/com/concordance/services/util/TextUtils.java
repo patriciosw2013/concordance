@@ -35,6 +35,15 @@ public class TextUtils {
 		return 0;
 	}
 
+	public static int indexOf(String in) {
+        Pattern p = Pattern.compile("\\d+");
+        Matcher m = p.matcher(in);
+		if(m.find())
+			return m.end();
+        
+		return 0;
+	}
+
 	public static List<Integer> extractNumbers(String in) {
 		if(in == null)
 			return new ArrayList<>();
@@ -69,13 +78,21 @@ public class TextUtils {
         Matcher matcher = pattern.matcher(in);
 		List<String> segs = new ArrayList<>();
         if (matcher.matches()) {
-			System.out.println("cumple");
-			for(int i = 1; i < matcher.groupCount(); i++) {
+			for(int i = 0; i < matcher.groupCount(); i++) {
 				segs.add(matcher.group(i));
 			}
         }
 
 		return segs;
+	}
+
+	public static String grupo(String in, String regex, int grupo) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(in);
+        if (matcher.matches())
+			return matcher.group(grupo);
+
+		return null;
 	}
 
 	public static String lpad(String input, String relleno) {

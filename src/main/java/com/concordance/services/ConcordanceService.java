@@ -23,6 +23,7 @@ public class ConcordanceService {
         List<String> vr = new ArrayList<>(basesBible());
 		vr.add("Patristica");
         vr.add("Autores");
+        vr.add("Talmud");
         vr.add("Notas");
 
         return vr;
@@ -37,13 +38,14 @@ public class ConcordanceService {
         vr.add("Latinoamericana");
         vr.add("DHH");
         vr.add("Vulgata");
+        vr.add("LXX");
 
         return vr;
     }
 
     public static List<RecordVo> concordance(String in, String base, boolean highlight) {
         try {
-            if("Patristica".equals(base) || "Autores".equals(base)) {
+            if("Patristica".equals(base) || "Autores".equals(base) || "Talmud".equals(base)) {
                 return AutoresService.concordancia(in, base, highlight);
             } else if("Notas".equals(base)) { 
                 return NotesUtil.concordancia(in, base, highlight);
@@ -65,7 +67,7 @@ public class ConcordanceService {
         String notes = null;
         List<ItemVo> chapters = null;
         try {
-            if("Patristica".equals(base) || "Autores".equals(base)) {
+            if("Patristica".equals(base) || "Autores".equals(base) || "Talmud".equals(base)) {
                 b = AutoresService.bookForVerse(verseId, base);
                 r = AutoresService.verse(verseId, base);
                 contents = AutoresService.readContents(b.getId(), r.getChapterId(), base);
@@ -108,7 +110,7 @@ public class ConcordanceService {
         String notes = null;
         List<ItemVo> chapters = null;
         try {
-            if("Patristica".equals(base) || "Autores".equals(base)) {
+            if("Patristica".equals(base) || "Autores".equals(base) || "Talmud".equals(base)) {
                 b = AutoresService.book(bookId, base);
                 chapters = AutoresService.chapters(bookId, base);
                 int chapterId = chapters.isEmpty() ? 0 : chapters.get(0).getCodigo();
@@ -171,7 +173,7 @@ public class ConcordanceService {
 
     public static List<AutorVo> obras(String base) {
         try {
-            if("Patristica".equals(base) || "Autores".equals(base)) {
+            if("Patristica".equals(base) || "Autores".equals(base) || "Talmud".equals(base)) {
                 return AutoresService.books(base);
             } else {
                 return BibleUtil.books(base);

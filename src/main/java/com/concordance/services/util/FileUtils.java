@@ -11,10 +11,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -27,6 +31,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
+import com.concordance.services.AutoresService;
 import com.concordance.services.vo.Book;
 import com.concordance.services.vo.BookAuxVo;
 import com.concordance.services.vo.BookMetadata;
@@ -96,6 +101,66 @@ public class FileUtils {
 
 		PDFTextStripper stripper = new PDFTextStripper();
 		return stripper.getText(document);
+	}
+
+	public static List<Book> processDoc(String bookName, String path, BookMetadata meta) throws FileNotFoundException, IOException {
+		if(meta == null)
+			throw new RuntimeException("Debe ingresar la metadata");
+
+		return ListUtils.splitRegex(readDocxFile(path), meta.getKeySplit(), true).stream().map(i -> {
+			Book b = new Book();
+			b.setName(meta.getKeySplit() != null ? i.get(0).trim() : bookName);
+			if(bookName.indexOf(" - ") == -1) {
+				b.setAutor("");
+				b.setParent(bookName);
+			} else {
+				String[] header = bookName.split(" - ");
+				b.setAutor(header[0].trim());
+				b.setParent(header[1]);
+
+				if(b.getName().equals(bookName))
+					b.setName(b.getParent());
+			}
+
+			int j = meta.getIndexTitle() + (meta.getKeySplit() == null ? 1 : 2);
+			b.setTitle(meta.getIndexTitle() >= 0 ? i.get(meta.getIndexTitle() + 1).trim() : null);
+
+			if(meta.getIndexDate() > 0) {
+				b.setBookDate(i.get(meta.getIndexDate() + 1).trim());
+				j = Math.max(j, meta.getIndexDate() + 1);
+			}
+
+			if(meta.getIndexDestination() > 0) {
+				b.setDestination(i.get(meta.getIndexDestination() + 1).trim());
+				j = Math.max(j, meta.getIndexDestination() + 1);
+			}
+
+			if(meta.getRegexChapter() != null) {
+				Map<String, List<String>> chapters = ListUtils.groupByRegex(i.subList(j, i.size()), meta.getRegexChapter());
+				if(meta.getRegexVerses() != null) {
+					b.setParagraphs(chapters.entrySet().stream().flatMap(z -> {
+						List<Paragraph> pars = new ArrayList<>();
+						if(!meta.isChpTogether())
+							pars.add(new Paragraph(z.getKey(), 0, z.getValue().get(0)));
+
+						pars.addAll(ListUtils.groupByRegex(z.getValue().subList(meta.isChpTogether() ? 0 : 1, z.getValue().size()), 
+							meta.getRegexVerses()).entrySet().stream().map(c -> new Paragraph(z.getKey(), "".equals(c.getKey()) ? TextUtils.extractNumber(c.getValue().get(0)) : Integer.parseInt(c.getKey()), 
+								c.getValue().stream().collect(Collectors.joining(meta.getJoiningKey())))).collect(Collectors.toList()));
+						return pars.stream();
+					}).collect(Collectors.toList()));
+				} else {
+					b.setParagraphs(chapters.entrySet().stream().map(z -> new Paragraph(z.getKey(), 0, 
+						z.getValue().stream().collect(Collectors.joining(meta.getJoiningKey())))).collect(Collectors.toList()));
+				}
+			} else if(meta.getRegexVerses() != null) {
+				Map<String, List<String>> verses = ListUtils.groupByRegex(i.subList(j, i.size()), meta.getRegexVerses());
+				b.setParagraphs(verses.entrySet().stream().map(z -> new Paragraph("", "".equals(z.getKey()) ? 0 : Integer.parseInt(z.getKey()), 
+						z.getValue().stream().collect(Collectors.joining(meta.getJoiningKey())))).collect(Collectors.toList()));
+			} else {
+				b.setParagraphs(i.subList(j + 1, i.size()).stream().map(z -> new Paragraph(0, z)).collect(Collectors.toList()));
+			}
+			return b;
+		}).collect(Collectors.toList());
 	}
 
 	/** Devuelve una lista de parrafos divididos en libros que pueden tener una palabra clave para su division */
@@ -307,5 +372,23 @@ public class FileUtils {
 		}
 
 		return res;
+	}
+
+	public static void main(String[] args) {
+		try {
+			BookMetadata meta = BookMetadata.builder().keySplit("^(LIBRO).*")
+				.indexTitle(0)
+				.chapter(true).verses(true)
+				.regexChapter("^(CAP \\d+)\\..*").regexVerses("^(?:CAP \\d+\\.\\s)?(\\d+)\\..*")
+				.chapterKey(null).verseKey("").chpTogether(false).joiningKey(">>").build();
+			try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+				String bookName = "Test";
+				for(Book x : splitDocx(bookName, "D:\\Libros\\" + bookName + ".docx", meta)) {
+					writer.println(x);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

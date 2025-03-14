@@ -83,6 +83,72 @@ public class ImportBibleUtil {
 		}
 	}
 
+	public static void loadLXX(boolean existHTML) throws SQLException, IOException {
+		String base = "LXX";
+		String htmlFile = "D:\\Desarrollo\\htmlLXX.txt";
+		if(!existHTML) {
+			try(PrintWriter writer = new PrintWriter(htmlFile, "UTF-8")) {
+				for(int testId : new int[]{1}) {
+					for(ItemVo b : BibleUtil.booksList(testId, base)) {
+						for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
+							String url = String.format("https://www.obohu.cz/bible/index.php?k=%s&kap=%s&styl=LXXA",
+							b.getDescripcion(), c);
+							System.out.println(url);
+							/*String txt = WebUtil.readHTML(url);
+							writer.println(txt);*/
+
+							String txt = WebUtil.readWeb(url, "div#blok_versu.row", false);
+							txt = txt.replaceAll("<span class=\"cisloversen\"", "\r\n\r\n<span class=\"cisloversen\"");
+							writer.println(">>>>>>");
+							writer.println(b.getCodigo() + " " + c);
+							writer.println(txt);
+							//break;
+						}
+						//break;
+					}
+				}
+			}
+		}
+
+		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
+			List<RecordVo> verses = new ArrayList<>();
+			for(List<String> res : ListUtils.split(Files.readAllLines(new File(htmlFile).toPath(), 
+				StandardCharsets.UTF_8), ">>>>>>")) {
+				writer.println(">>>>>>" + res.get(0));
+				String[] aux = res.get(0).split(" ");
+				int bookId = Integer.parseInt(aux[0]);
+				int chapter = Integer.parseInt(aux[1]);
+				for(int i = 0; i < res.size(); i++) {
+					String g = res.get(i);
+					int v = 0;
+					List<String> txt = new ArrayList<>();
+					if(g.startsWith("<span class=\"cisloversen\"")) {
+						for(String x: g.split("}</span>")) {
+							if(x.trim().isEmpty()) continue;
+							String html = x.concat("}</span>");
+							if(v == 0) {
+								String verse = WebUtil.readTag(html, "span.cisloversen", false);
+								v = Integer.parseInt(verse);
+							}
+							String strong = WebUtil.readTag(html, "span.strong", false);
+							String morfo = WebUtil.readTag(html, "span.morf", false);
+							String text = WebUtil.extractText(html);
+							if(text == null) continue;
+							txt.add(String.format("%s (%s) %s", text, strong, morfo));
+						}
+
+						verses.add(new RecordVo(bookId, 0, chapter, null, v, txt.stream().collect(Collectors.joining(" "))));
+					}
+					v = 0;
+				}
+			}
+
+			createVerses(verses, base);
+			for(RecordVo o : verses)
+				writer.println(o);
+		}
+	}
+
 	public static void loadBibleCatolic(String base, boolean existHTML) throws IOException, SQLException {
 		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
 		if(!existHTML) {
@@ -424,7 +490,8 @@ public class ImportBibleUtil {
 		try {
 			//read("D:\\Desarrollo\\books");
 			//loadBible("NBLA");
-			loadBibleCatolic("Latinoamericana", true);
+			//loadBibleCatolic("Latinoamericana", true);
+			loadLXX(true);
             //importBookYouversion("NBLA", false);
 			//importBookBibleGateway("NBLA");
 		} catch(Exception e) {

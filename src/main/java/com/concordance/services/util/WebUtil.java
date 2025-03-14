@@ -12,6 +12,8 @@ import java.util.Scanner;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
 import com.concordance.services.vo.ItemVo;
 
@@ -63,6 +65,25 @@ public class WebUtil {
         Document document = Jsoup.parse(readHTML(url));
         Element div = document.select(tag).first();
         return pretty ? div.outerHtml() : div.html();
+    }
+
+    public static String readTag(String in, String tag, boolean pretty) throws IOException {
+        Document document = Jsoup.parse(in);
+        Element div = document.select(tag).first();
+        if(div == null) return null;
+        return pretty ? div.outerHtml() : div.html();
+    }
+
+    public static String extractText(String in) {
+        Document document = Jsoup.parse(in);
+        for (Node node : document.body().childNodes()) {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                return textNode.text().trim();
+            }
+        }
+
+        return null;
     }
 
     public static String formatHtml(String in) {
