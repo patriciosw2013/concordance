@@ -9,8 +9,11 @@ public class PatristicaUtil extends AutoresService {
     public static void main(String[] args) {
         try {
 			String base = "Patristica";
-			for(String name : Arrays.asList("Rufino de Aquileya - Comentario al símbolo apostólico"))
-            	read("D:\\Libros\\Patristica\\" + name + ".docx", base, false);
+            boolean sim = false;
+			for(String name : Arrays.asList("Agustin de Hipona - Confesiones", "Agustin de Hipona - Homilias sobre 1 Juan", "Agustin de Hipona - Sermon de la montaña"))
+            	read("D:\\Libros\\Patristica\\" + name + ".docx", base, sim);
+            
+            NotesUtil.loadNotesFile("Patristica", sim);
         } catch (Exception e) {
             e.printStackTrace();
         }

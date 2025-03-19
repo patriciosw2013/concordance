@@ -62,7 +62,7 @@ public class ListUtils {
         boolean existRegex = false;
         for (String item : lista) {
             if (item.matches(regex)) {
-                if (!sublistaActual.isEmpty()) {
+                if (!sublistaActual.isEmpty()) {;
                     String clave = !existRegex ? "" : sublistaActual.get(0).replaceAll(regex, "$1");
                     resultado.put(clave, new ArrayList<>(sublistaActual));
                 }

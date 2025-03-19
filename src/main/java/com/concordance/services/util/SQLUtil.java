@@ -29,6 +29,8 @@ public class SQLUtil {
 			bases.put("Notas", "D:\\Desarrollo\\databases\\patristica.db");
 			bases.put("Talmud", "D:\\Desarrollo\\databases\\jewish.db");
 			bases.put("Interlineal", "D:\\Desarrollo\\databases\\interlineal.sqlite");
+			bases.put("base", "D:\\Desarrollo\\databases\\base.db");
+			bases.put("Concilios", "D:\\Desarrollo\\databases\\concilios.db");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}

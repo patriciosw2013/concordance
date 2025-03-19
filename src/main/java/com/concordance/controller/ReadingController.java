@@ -1,6 +1,7 @@
 package com.concordance.controller;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -41,9 +42,15 @@ public class ReadingController implements Serializable {
 
     @PostConstruct
     public void init() {
-        bases = ConcordanceService.bases();
-        base = bases.get(0);
-        search();
+        try {
+            bases = ConcordanceService.bases();
+            base = bases.get(0);
+            search();
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+            e.printStackTrace();
+        }
     }
 
     public void clear() {
@@ -104,7 +111,7 @@ public class ReadingController implements Serializable {
         }
     }
 
-    private void loadContents(int chapter) {
+    private void loadContents(int chapter) throws SQLException {
         if(book.getData().getCodigo() == 0) return;
         ResultsVo res = ConcordanceService.readContents(book.getData().getCodigo(), chapter, base);
         title = res.getResults().getChapter();

@@ -136,6 +136,16 @@
 
                 <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" defaultCommand="true"
                     action="#{interlinealController.evaluate}" update="updateForm:searchItems, updateForm:inputTxt" />
+				
+				<p:divider layout="vertical" style="width: 100px;" />
+
+				<p:selectOneMenu id="option" value="#{interlinealController.base}">
+					<f:selectItems var="o" value="#{interlinealController.bases}" itemLabel="#{o}" itemValue="#{o}" />
+				</p:selectOneMenu>
+
+				<p:divider layout="vertical" style="width: 100px;" />
+
+				<p:commandLink value="Diccionario" onclick="PF('dlgDic').show()"/>
             </h:panelGrid>
             <h:panelGrid id="searchItems" columns="1" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 100%">
 				<div class="recuadro">
@@ -156,13 +166,17 @@
 					<div class="product-grid-item">
 						<div class="item-id">
 							<p:commandLink value="#{o.strongId}" action="#{interlinealController.loadStrong(o.strongId)}" 
-                                update="updateForm:modalStrong"
+                                update="updateForm:modalStrong" rendered="#{o.strongId > 0}"
                                 oncomplete="PF('dlgStr').show()"/>
 
                             <p:commandButton id="lnkRef" value="" icon="pi pi-bookmark" styleClass="rounded-button ui-button-secondary ui-button-outlined"
 								action="#{interlinealController.loadReferences(o.strongId)}" style="height:32px;width:32px;margin-left:10px;"
-                                update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()"/>
+                                update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()" rendered="#{o.strongId > 0}"/>
                             <p:tooltip for="lnkRef" value="Ocurrencias en la Escritura" position="right"/>
+
+							<p:commandButton id="lnkRefw" value="" icon="pi pi-bookmark" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+								action="#{interlinealController.loadReferences(o.word)}" style="height:32px;width:32px;margin-left:10px;"
+                                update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()" rendered="#{o.strongId == 0}"/>
 						</div>
 						<div class="product-name"><span class="product-category">#{o.word}</span></div>
 						<div class="item-type">
@@ -239,6 +253,27 @@
 					<h:outputText value="#{o[1]}" escape="false" />
 				</p:column>
 			</p:dataTable>
+        </p:dialog>
+		<p:dialog id="modalDicc" header="Diccionario" widgetVar="dlgDic" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
+            <p:inputText id="inputStr" value="#{interlinealController.strongInput}" />
+
+			<p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" defaultCommand="true"
+				action="#{interlinealController.findStrong}" update="updateForm:diccs" />
+			<br/>
+			<br/>
+			<p:dataTable id="diccs" var="o" value="#{interlinealController.strongs}" scrollable="true" scrollHeight="350" showGridlines="true"
+                rowIndexVar="rowIndex" rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}" >
+                <p:column headerText="Código" style="width: 20%;">
+                    <p:commandLink value="#{o.codigo}" action="#{interlinealController.loadReferences(o.codigo, o.testamentId)}"
+						update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()"/>
+                </p:column>
+				<p:column headerText="Palabra" style="width: 20%;">
+                    <h:outputText value="#{o.word}" />
+                </p:column>
+                <p:column headerText="Descripción" style="width: 60%;">
+                    <h:outputText value="#{o.meaning}" />
+                </p:column>
+            </p:dataTable>
         </p:dialog>
     </h:form>
 </h:body>

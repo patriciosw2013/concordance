@@ -11,14 +11,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -31,7 +28,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
-import com.concordance.services.AutoresService;
 import com.concordance.services.vo.Book;
 import com.concordance.services.vo.BookAuxVo;
 import com.concordance.services.vo.BookMetadata;
@@ -127,7 +123,7 @@ public class FileUtils {
 
 			if(meta.getIndexDate() > 0) {
 				b.setBookDate(i.get(meta.getIndexDate() + 1).trim());
-				j = Math.max(j, meta.getIndexDate() + 1);
+				j = Math.max(j, meta.getIndexDate() + 2);
 			}
 
 			if(meta.getIndexDestination() > 0) {

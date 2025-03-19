@@ -13,20 +13,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.concordance.services.AutoresService;
+import com.concordance.services.vo.Book;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.bible.NoteBibleVo;
 
 public class NotesUtil extends AutoresService {
 	
-	public static List<RecordVo> concordancia(String in, String base, boolean highlight) throws SQLException, IOException {
+	public static List<RecordVo> concordancia(String in, String base, boolean highlight) throws SQLException {
 		if(in == null || in.trim().length() == 0)
 			return null;
 		
 		List<RecordVo> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.book_id, v.book_id, v.text || ' (' || b.parent || ':' || b.name || ')' "
+			String sql = "select v.book_id, v.id, v.text || ' (' || b.parent || ':' || b.name || ')' "
 					+ "from notes v inner join book b on (b.id = v.book_id) "
 					+ "where v.text like '% " + in + "%'";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
@@ -48,33 +49,76 @@ public class NotesUtil extends AutoresService {
 		return res;
 	}
 
+	public static Book bookForVerse(int verseId, String base) throws SQLException {
+		if(verseId == 0)
+			return null;
+
+		ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select v.title, coalesce(c.name, ''), case when v.name = v.parent then '' else v.name end, v.parent, v.id " +
+				"from book v inner join notes vr on (vr.book_id = v.id) where vr.id = " + verseId;
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				result = st.executeQuery();
+				result.next();
+				Book b = new Book();
+				b.setTitle(result.getString(1));
+				b.setAutor(result.getString(2));
+				b.setName(result.getString(3));
+				b.setParent(result.getString(4));
+				b.setId(result.getInt(5));
+
+				return b;
+			}
+		}
+	}
+
+	public static RecordVo verse(int verseId, String base) throws SQLException {
+		if(verseId == 0)
+			return null;
+
+		ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select v.book_id, coalesce(c.name, ''), c.id, v.id from notes v left join chapter c on (c.id = v.chapter_id) where v.id = " + verseId;
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				result = st.executeQuery();
+				result.next();
+				RecordVo b = new RecordVo();
+				b.setBookId(result.getInt(1));
+				b.setChapter(result.getString(2));
+				b.setChapterId(result.getInt(3));
+				b.setVerse(result.getInt(4));
+				b.setRecordId(verseId);
+
+				return b;
+			}
+		}
+	}
+
 	public static void readNotesFromURL() throws IOException, SQLException {
 		List<List<String>> notes = FileUtils.readXLS("D:\\Desarrollo\\Notas obras agustin.xlsx");
 		int cont = 1;
-		List<NoteBibleVo> res = new ArrayList<>();
-		for (List<String> o : notes) {
-			int id = Integer.parseInt(o.get(0));
-			String noteUrl = o.get(4);
-			String text = null;
-			System.out.println(String.format("Insertando %s de %s notas para %s: %s", 
-				cont++, notes.size(), o.get(1), o.get(2)));
-			try {
-				text = WebUtil.readURL("https://www.augustinus.it" + noteUrl + ".htm", StandardCharsets.ISO_8859_1.name());
-			} catch (Exception e) {
-				System.out.println("URL sin resultados: " + noteUrl + ": " + e.getMessage());
-			}
+		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+			for (List<String> o : notes) {
+				String noteUrl = o.get(4);
+				List<String> text = null;
+				String url = "https://www.augustinus.it" + noteUrl + ".htm";
+				System.out.println(String.format("Notas %s de %s para %s: %s, url: %s", 
+					cont++, notes.size(), o.get(1), o.get(2), url));
+				try {
+					//text = WebUtil.readURL(url, StandardCharsets.ISO_8859_1.name());
+					text = WebUtil.readTags(WebUtil.readHTML(url), "p");
+				} catch (Exception e) {
+					System.out.println("URL sin resultados: " + noteUrl + ": " + e.getMessage());
+				}
 
-			if(text == null) continue;
-			if(text.indexOf("1") < 0) {
-				System.out.println("URL con error de inicio: " + noteUrl);
-				continue;
+				if(text == null) continue;
+				if(text.isEmpty()) continue;
+				writer.println(String.format(">>Agustin de Hipona - %s - %s - %s", 
+					o.get(1).trim(), o.get(1).trim(), o.get(2).trim()));
+				for(String z: text)
+					writer.println(z);
 			}
-			text = text.substring(text.indexOf("1"));
-			text = text.replace(",", ":");
-			res.add(new NoteBibleVo(id, 0, 0, 0, text));
-			//createNotes(Arrays.asList(text.split("\r\n")), id, 0, "Patristica");
 		}
-		createNotes(res, "Patristica");
 		System.out.println("Notas creadas con exito");
 	}
 
@@ -119,11 +163,12 @@ public class NotesUtil extends AutoresService {
 		}
 	}
 
-	public static void loadNotesFile(String base) throws IOException, SQLException {
+	public static void loadNotesFile(String base, boolean simul) throws IOException, SQLException {
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
 			List<String> nts = Files.readAllLines(new File("D:\\Desarrollo\\Notas.txt").toPath(), StandardCharsets.UTF_8);
 			List<NoteBibleVo> res = new ArrayList<>();
 			int bookId = 0;
+			int chapterId = 0;
 			for(String x : nts) {
 				if(x.trim().isEmpty()) continue;
 				if(x.startsWith(">>")) {
@@ -131,18 +176,22 @@ public class NotesUtil extends AutoresService {
 					String autor = key[0];
 					String obra = key[1];
 					String seccion = obra;
+					String chapter = null;
 					if(key.length > 2)
 						seccion = key[2];
-					
+					if(key.length > 3)
+					chapter = key[3];
+
 					bookId = AutoresService.bookId(seccion, obra, autor, base);
+					chapterId = chapter != null ? AutoresService.chapterId(bookId, chapter, base) : 0;
 					continue;
 				}
-				res.add(new NoteBibleVo(bookId, 0, 0, 0, x));
+				res.add(new NoteBibleVo(bookId, chapterId, 0, 0, x));
 			}
 
-			createNotes2(res, base);
+			if(!simul) createNotes2(res, base);
 			for(NoteBibleVo x: res) {
-				writer.println(x.getBookId() + " " + x.getText());
+				writer.println(x.getBookId() + " " + x.getChapterId() + " " + x.getText());
 			}
 			
 			System.out.println("Notas creadas con exito");
@@ -151,7 +200,8 @@ public class NotesUtil extends AutoresService {
 
 	public static void main(String[] args) {
 		try {
-			loadNotesFile("Patristica");
+			readNotesFromURL();
+			//loadNotesFile("Patristica", false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

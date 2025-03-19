@@ -23,6 +23,7 @@ import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.Verse;
 import com.concordance.services.vo.bible.BibleBook;
 import com.concordance.services.vo.bible.BookRefVo;
+import com.concordance.services.vo.interlineal.InterlinealVo;
 
 public class ImportBibleUtil {
 
@@ -83,6 +84,37 @@ public class ImportBibleUtil {
 		}
 	}
 
+	public static void loadText() throws SQLException, IOException {
+		try (PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
+			/*for (int c = 9; c <= 21; c++) {
+				String url = String.format("https://www.mercaba.org/CONCILIOS/C_%s.htm",
+						TextUtils.lpad(String.valueOf(c), "0"));
+				System.out.println(url);
+				String txt = WebUtil.formatHtml(WebUtil.readTag(WebUtil.readHTML(url), "body", false));
+				writer.println(txt);
+				writer.println();
+			}*/
+
+			for (int c = 1; c <= 15; c++) {
+				String url = String.format("https://www.mercaba.org/CONCILIOS/Trento%s.htm",
+						TextUtils.lpad(String.valueOf(c), "0"));
+				System.out.println(url);
+				writer.println(WebUtil.readURL(url, StandardCharsets.ISO_8859_1.name()));
+				writer.println();
+			}
+		}
+	}
+
+	public static void loadUrls() throws SQLException, IOException {
+		try (PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+			String url = "https://www.mercaba.org/CONCILIOS/Trento.htm";
+			System.out.println(url);
+			for (String x : WebUtil.readTags(WebUtil.readHTML(url), "a", "href"))
+				writer.println(x);
+			writer.println();
+		}
+	}
+
 	public static void loadLXX(boolean existHTML) throws SQLException, IOException {
 		String base = "LXX";
 		String htmlFile = "D:\\Desarrollo\\htmlLXX.txt";
@@ -112,6 +144,7 @@ public class ImportBibleUtil {
 
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
 			List<RecordVo> verses = new ArrayList<>();
+			List<InterlinealVo> itls = new ArrayList<>();
 			for(List<String> res : ListUtils.split(Files.readAllLines(new File(htmlFile).toPath(), 
 				StandardCharsets.UTF_8), ">>>>>>")) {
 				writer.println(">>>>>>" + res.get(0));
@@ -130,11 +163,18 @@ public class ImportBibleUtil {
 								String verse = WebUtil.readTag(html, "span.cisloversen", false);
 								v = Integer.parseInt(verse);
 							}
+
 							String strong = WebUtil.readTag(html, "span.strong", false);
 							String morfo = WebUtil.readTag(html, "span.morf", false);
 							String text = WebUtil.extractText(html);
 							if(text == null) continue;
-							txt.add(String.format("%s (%s) %s", text, strong, morfo));
+							if(text.equals("}")) continue;
+
+							txt.add(text);
+							itls.add(new InterlinealVo(bookId, chapter, v,
+									strong == null ? 0 : Integer.parseInt(strong.substring(1)),
+									text,
+									morfo == null ? "" : morfo.substring(1, morfo.length() - 1), ""));
 						}
 
 						verses.add(new RecordVo(bookId, 0, chapter, null, v, txt.stream().collect(Collectors.joining(" "))));
@@ -144,7 +184,12 @@ public class ImportBibleUtil {
 			}
 
 			createVerses(verses, base);
+
+			//InterlinealService.createInterlineal(itls, 2);
 			for(RecordVo o : verses)
+				writer.println(o);
+			
+			for(InterlinealVo o : itls)
 				writer.println(o);
 		}
 	}
@@ -271,6 +316,37 @@ public class ImportBibleUtil {
 				writer.println(versiculo);
 			}
 			System.out.println("Versos creados exitosamente");
+		}
+	}
+
+	public static void importBookYouversion2(String base, boolean existHTML) throws SQLException, IOException {
+		String fileHtml = String.format("D:\\Desarrollo\\html_%s.txt", base);
+		if(!existHTML) {
+            try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
+                int idVersion = 103; //823 vulgata
+                for(int testId : new int[]{1, 2}) {
+                    for(ItemVo b : BibleUtil.booksList(testId, base)) {
+                        for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
+                            String url = String.format("https://www.bible.com/es/bible/%s/%s.%s.%s", //823  - VULG 
+                            idVersion, b.getDescripcion(), c, base);
+                            System.out.println(url);
+                            String txt = WebUtil.readWeb(url, "div.ChapterContent_reader__Dt27r", false);
+							
+							if(txt.contains("Este capítulo no está disponible en esta versión"))
+								throw new RuntimeException("Pagina no encontrada");
+
+							List<String> verses = WebUtil.readTags(txt, "span.chapterContent_verse__57FIw");
+                            writer.println(">>>>>>");
+							writer.println(b.getValor() + " " + c);
+							writer.println(txt);
+							for(String o : verses)
+                            	writer.println(o);
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
 		}
 	}
 
@@ -488,10 +564,13 @@ public class ImportBibleUtil {
 	
 	public static void main(String[] args) {
 		try {
+			//loadText();
+			//importBookYouversion2("NBLA", false);
 			//read("D:\\Desarrollo\\books");
 			//loadBible("NBLA");
 			//loadBibleCatolic("Latinoamericana", true);
-			loadLXX(true);
+			//loadLXX(true);
+			//loadBibleGateway("RVR1960", false);
             //importBookYouversion("NBLA", false);
 			//importBookBibleGateway("NBLA");
 		} catch(Exception e) {

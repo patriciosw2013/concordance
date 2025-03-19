@@ -35,13 +35,20 @@ public class ConcordanciaController implements Serializable {
 
     @PostConstruct
     public void init() {
-        bases = ConcordanceService.bases();
-        base = bases.get(0);
+        try {
+            bases = ConcordanceService.bases();
+            base = bases.get(0);
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+            e.printStackTrace();
+        }
     }
 
     public void search() {
         try {
             verses = ConcordanceService.concordance(input, base, true);
+            System.out.println(verses);
             if (verses.isEmpty())
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_WARN, "Warning", "Sin resultados"));
@@ -54,6 +61,7 @@ public class ConcordanciaController implements Serializable {
 
     public void onSelect() {
         try {
+            System.out.println("Consultando verseId: " + verseId);
             ResultsVo res = ConcordanceService.readContentsForVerse(Integer.parseInt(verseId), base, input, true);
             title = res.getResults().getChapter();
             txt = res.getResults().getContents().stream().collect(Collectors.joining("\n"));

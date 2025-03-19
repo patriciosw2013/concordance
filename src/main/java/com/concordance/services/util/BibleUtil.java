@@ -173,19 +173,6 @@ public class BibleUtil implements Serializable {
 		}
 		return verses;
 	}
-	
-	public static int max(String table, String base) throws SQLException {
-		ResultSet result = null;
-		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select max(id) from " + table);
-			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				result = st.executeQuery();
-				if(result.next()) {
-					return (int)result.getLong(1);
-				} else return 0;
-			}
-		}
-	}
 
 	public static int bookId(String name, String base) throws SQLException {
 		ResultSet result = null;
@@ -249,8 +236,7 @@ public class BibleUtil implements Serializable {
 
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.name, '', v.name, '', '', '' "
-					+ "from book v where v.id = " + bookId;
+			String sql = "select v.name, '', v.name, '', '', '' from book v where v.id = " + bookId;
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				result.next();
@@ -380,8 +366,9 @@ public class BibleUtil implements Serializable {
 		List<ItemIntVo> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.chapter, v.verse from chapter v where v.book_id = " + bookId + " order by 1,2";
+			String sql = "select v.chapter, v.verse from chapter v where v.book_id = ? order by 1,2";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setInt(1, bookId);
 				result = st.executeQuery();
 				while(result.next()) {
 					res.add(new ItemIntVo(result.getInt(1), result.getInt(2)));
@@ -514,9 +501,6 @@ public class BibleUtil implements Serializable {
 		ResultSet result = null;
 		int chp = 0;
 		try (Connection conn = db.connection(base)) {
-			/*String sql = String.format("select v.chapter, v.verse || ' ' || trim(v.text) "
-					+ "from verse v where v.book_id in (select x.book_id from verse x where x.id = %s) " 
-					+ "and v.chapter in (select x.chapter from verse x where x.id = %s)", verseId, verseId);*/
 			String sql = String.format("select b.chapter, b.verse || ' ' || trim(b.text) from book a inner join verse b on (a.id = b.book_id) " + 
 				"where (a.id, b.chapter) = (select x.book_id, x.chapter from verse x where x.id = %s)", verseId);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
@@ -535,12 +519,12 @@ public class BibleUtil implements Serializable {
 		List<NoteBibleVo> foot = readNotes(bookId, chapter, 1, base);
 		List<NoteBibleVo> cross = readNotes(bookId, chapter, 2, base);
 		List<String> res = new ArrayList<>();
-		if(!foot.isEmpty()) {
+		if(foot != null && !foot.isEmpty()) {
 			res.add("* Notas al pie:");
 			res.addAll(foot.stream().map(NoteBibleVo::getText).collect(Collectors.toList()));
 		}
 
-		if(!cross.isEmpty()) {
+		if(cross != null && !cross.isEmpty()) {
 			res.add("* Referencias cruzadas:");
 			res.addAll(cross.stream().map(i -> String.format("v.%s:%s: %s", i.getChapterId(), i.getVerse(), i.getText()))
 				.collect(Collectors.toList()));

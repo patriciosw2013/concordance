@@ -85,8 +85,9 @@
                         <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
                         <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}" update="pnl,head" process="@this"/>
                     </p:selectOneMenu>
-                    <p:commandButton value="" rendered="#{not empty searchController.cita.notes}" type="button" style="width:35px; height:30px;" update="pnlNotes"
-                        icon="pi pi-bookmark" onclick="PF('dlg1').show()"/>
+                    <p:commandButton value="" rendered="#{not empty searchController.cita.notes}" type="button" icon="pi pi-tag"
+                        styleClass="rounded-button ui-button-secondary ui-button-outlined" style="height:32px;width:32px;margin-left:10px;"
+                        update="pnlNotes" onclick="PF('dlg1').show()" />
                 </h:panelGrid>
 
                 <h:panelGrid id="headPar" columns="3" columnClasses="headerGrid headerGrid headerGrid">

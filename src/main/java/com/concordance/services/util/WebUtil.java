@@ -8,12 +8,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 
 import com.concordance.services.vo.ItemVo;
 
@@ -74,6 +77,26 @@ public class WebUtil {
         return pretty ? div.outerHtml() : div.html();
     }
 
+    public static List<String> readTags(String in, String tag) throws IOException {
+        Document document = Jsoup.parse(in);
+        Elements divs = document.select(tag);
+        List<String> res = new ArrayList<>();
+        for (Element span : divs) {
+            res.add(span.text());
+        }
+        return res;
+    }
+
+    public static List<String> readTags(String in, String tag, String attr) throws IOException {
+        Document document = Jsoup.parse(in);
+        Elements divs = document.select(tag);
+        List<String> res = new ArrayList<>();
+        for (Element span : divs) {
+            res.add(span.attr(attr));
+        }
+        return res;
+    }
+
     public static String extractText(String in) {
         Document document = Jsoup.parse(in);
         for (Node node : document.body().childNodes()) {
@@ -86,8 +109,20 @@ public class WebUtil {
         return null;
     }
 
+    public static String replaceLinks(String in) {
+        String regex = "(https?://(?:www\\.)?youtube\\.com/watch\\?v=[\\w-]+)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(in);
+
+        return matcher.replaceAll("<a href=\"$0\">$0</a>");
+    }
+
     public static String formatHtml(String in) {
         return Jsoup.parse(in).wholeText();
+    }
+
+    public static String formatHtml(String in, String charset) {
+        return Jsoup.parse(in, charset).wholeText();
     }
 
     public static void main(String[] args) {

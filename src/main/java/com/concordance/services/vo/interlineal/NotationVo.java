@@ -8,7 +8,6 @@ import lombok.Data;
 @Data
 public class NotationVo {
 
-    private int testamentId;
     private String code;
     private String tipo;
     private String tiempo; 
@@ -24,11 +23,12 @@ public class NotationVo {
     private String personaConj;
     private String numeroConj;
     private String generoConj;
+    private String language;
 
     public String summary() {
         List<String> campos = new ArrayList<>();
         campos.add(tipo);
-        if(testamentId == 2) {
+        if("griego".equals(language)) {
             campos.add(tiempo);
             campos.add(voz);
             campos.add(modo);
@@ -52,7 +52,7 @@ public class NotationVo {
 
         StringBuilder sb = new StringBuilder();
         boolean first = true; 
-        String delimiter = testamentId == 1 ? "." : "-";
+        String delimiter = "griego".equals(language) ? "-" : ".";
         for (String campo : campos) {
             if (campo != null) { 
                 if (!first) {

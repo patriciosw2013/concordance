@@ -45,6 +45,9 @@ alter table book add column bookDate varchar(70);
 alter table book add column abb text;
 alter table verse add column chapter varchar(100);
 alter table verse add column chapter_id integer;
+alter table interlineal add column version integer;
+
+update interlineal set version = 1;
 
 CREATE TABLE chapter (id INTEGER NOT NULL, book_id INTEGER, chapter integer, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
 
@@ -60,6 +63,32 @@ CREATE TABLE notes (id integer NOT NULL,
 book_id INTEGER, chapter integer, text TEXT, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
 alter table notes add column verse integer;
 alter table notes add column type integer;
+
+CREATE TABLE version (id INTEGER NOT NULL PRIMARY KEY, name text);
+insert into version (1, 'RVR1960');
+insert into version (2, 'LXX');
+
+-- actualizar meaning
+update interlineal set meaning = (select dictionary.meaning from dictionary where dictionary.word = interlineal.word and language = 'griego') 
+where version = 2
+
+update interlineal set meaning = (select dictionary.meaning from dictionary where dictionary.word = interlineal.word and language = 'latin') 
+where version = 3
+
+-- bases
+insert into bases (name, conc, intl, bible) values ('RVR1960', 1, 1, 1);
+insert into bases (name, conc, intl, bible) values ('NTV', 1, 0, 1);;
+insert into bases (name, conc, intl, bible) values ('NVI', 1, 0, 1);
+insert into bases (name, conc, intl, bible) values ('TLA', 1, 0, 1);
+insert into bases (name, conc, intl, bible) values ('NBLA', 1, 0, 1);
+insert into bases (name, conc, intl, bible) values ('Latinoamericana', 1, 0, 1);
+insert into bases (name, conc, intl, bible) values ('DHH', 1, 0, 1);
+insert into bases (name, conc, intl, bible) values ('Vulgata', 1, 1, 1);
+insert into bases (name, conc, intl, bible) values ('LXX', 1, 1, 1);
+insert into bases (name, conc, intl, bible) values ('Patristica', 1, 0, 0);
+insert into bases (name, conc, intl, bible) values ('Autores', 1, 0, 0);
+insert into bases (name, conc, intl, bible) values ('Talmud', 1, 0, 0);
+insert into bases (name, conc, intl, bible) values ('Notas', 1, 0, 0);
 
 -- notacion de robinson
 drop table notation;

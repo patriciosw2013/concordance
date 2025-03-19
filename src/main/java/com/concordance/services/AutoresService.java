@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 
+import com.concordance.services.util.DBUtil;
 import com.concordance.services.util.FileUtils;
 import com.concordance.services.util.SQLUtil;
 import com.concordance.services.util.TextUtils;
@@ -37,23 +38,23 @@ public class AutoresService {
 
 	static {
 		complex = new HashMap<>();
-		complex.put("Agustin de Hipona - Sermones", BookMetadata.builder().keySplit("^(SERMÓN).*")
-			.indexTitle(1)
+		complex.put("Agustin de Hipona - Sermones", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(SERMÓN.*)")
 			.joiningKey("\n").build());
-        complex.put("Agustin de Hipona - Cartas", BookMetadata.builder().keySplit("^(CARTA).*")
-			.indexTitle(1)
-			.indexDestination(2)
-			.indexDate(3).joiningKey("\n").build());
+        complex.put("Agustin de Hipona - Cartas", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(CARTA.*)")
+			.joiningKey("\n").build());
 		complex.put("Agustin de Hipona - Cuestiones sobre el Heptateuco", BookMetadata.builder().keySplit("^(LIBRO).*")
 			.indexTitle(0)
 			.chapter(false).verses(true)
 			.regexChapter(null).regexVerses("^\\d+[ ].*?")
 			.chapterKey(null).verseKey(" ").joiningKey("\n").build());
-		complex.put("Agustin de Hipona - Comentarios a los Salmos", BookMetadata.builder().keySplit("^(SALMO).*")
+		complex.put("Agustin de Hipona - Comentarios a los Salmos", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(false).verses(true)
-			.regexChapter(null).regexVerses("^\\d+[.].*?")
-			.chapterKey(null).verseKey(".").joiningKey("\n").build());
+			.regexChapter("^(SALMO \\d+.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
 		complex.put("A Diogneto", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
 			.chapter(true).verses(false)
@@ -100,10 +101,9 @@ public class AutoresService {
 			.regexChapter("^(CATEQUESIS).*$").regexVerses("^\\d+(\\. ).*?")
 			.chapterKey(".").verseKey(". ").joiningKey(" ").build());
 		complex.put("Agustin de Hipona - Sermon de la montaña", BookMetadata.builder().keySplit("^(LIBRO).*")
-			.indexTitle(-1)
-			.chapter(true).verses(true)
-			.regexChapter("^(CAPÍTULO).*$").regexVerses("^\\d+(\\. ).*?")
-			.chapterKey(null).verseKey(". ").joiningKey("\n").build());
+			.indexTitle(0)
+			.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
 		complex.put("Agustin de Hipona - Cuestiones a Simpliciano", BookMetadata.builder().keySplit("^(LIBRO).*")
 			.indexTitle(-1)
 			.chapter(true).verses(true)
@@ -118,19 +118,16 @@ public class AutoresService {
 			.indexTitle(0)
 			.indexDestination(1)
 			.indexDate(2)
-			.chapter(true).verses(true)
-			.regexChapter("^(CAPÍTULO).*$").regexVerses("^\\d+(\\.).*?")
-			.chapterKey(null).verseKey(".").joiningKey("\n").build());
-		complex.put("Agustin de Hipona - Homilias sobre 1 Juan", BookMetadata.builder().keySplit("^(HOMILÍA).*")
+			.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Homilias sobre 1 Juan", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(false).verses(true)
-			.regexChapter(null).regexVerses("^\\d+(\\.).*?")
-			.chapterKey(null).verseKey(".").joiningKey("\n").build());
-		complex.put("Agustin de Hipona - Tratados sobre el evangelio de Juan", BookMetadata.builder().keySplit("^(TRATADO).*")
+			.regexChapter("^(HOMILÍA.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Tratados sobre el evangelio de Juan", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(false).verses(true)
-			.regexChapter(null).regexVerses("^\\d+(\\.).*?")
-			.chapterKey(null).verseKey(".").joiningKey("\n").build());
+			.regexChapter("^(TRATADO.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
 		complex.put("Agustin de Hipona - La ciudad de Dios", BookMetadata.builder().keySplit("^(LIBRO).*")
 			.indexTitle(0)
 			.chapter(true).verses(true)
@@ -183,19 +180,50 @@ public class AutoresService {
 			.chapterKey(null).verseKey(".").joiningKey("\n").build());
 		complex.put("Agustin de Hipona - Contra dos cartas de los pelagianos", BookMetadata.builder().keySplit("^(LIBRO.*)")
 			.indexTitle(-1)
-			.chapter(true).verses(true)
 			.regexChapter("^(Capítulo.*)").regexVerses("^(\\d+)\\..*")
-			.chapterKey(null).verseKey(".").joiningKey("\n").build());
+			.joiningKey("\n").build());
 		complex.put("Agustin de Hipona - Contra Juliano", BookMetadata.builder().keySplit("^(LIBRO.*)")
 			.indexTitle(0)
-			.chapter(true).verses(true)
 			.regexChapter("^([MDCLXVI]+)\\..*").regexVerses("^(\\d+)\\..*")
-			.chapterKey(null).verseKey(null).chpTogether(true).joiningKey("\n").build());
+			.chpTogether(true).joiningKey("\n").build());
 		complex.put("Rufino de Aquileya - Comentario al símbolo apostólico", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(true).verses(true)
 			.regexChapter(null).regexVerses("^(\\d+)\\..*")
-			.chapterKey(null).verseKey(null).joiningKey("\n").build());
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La gracia de Jesucristo y el pecado original", BookMetadata.builder().keySplit("^(LIBRO.*)")
+			.indexTitle(0)
+			.indexDate(1)
+			.regexChapter("^(Capítulo.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La gracia y del libre albedrío", BookMetadata.builder().keySplit(null)
+			.indexTitle(0)
+			.indexDate(1)
+			.regexChapter("^(Capítulo.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El espíritu y la letra", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La naturaleza y la gracia", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Juan Crisóstomo - Homilias", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^([MDCLXVI]+):.*").regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("Juan Crisóstomo - Homilias II", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^([MDCLXVI]+)\\sHOMILÍA.*").regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("Atanasio de Alejandria - La encarnación del Verbo", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^([MDCLXVI]+|CONCLUSIÓN|INTRODUCCIÓN)\\..*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Atanasio de Alejandria - Contra los arrianos", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(DISCURSO [MDCLXVI]+)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
 
 		/* Autores */
 		complex.put("Tomas de Kempis - IMITACIÓN DE CRISTO", BookMetadata.builder().keySplit("^(LIBRO).*")
@@ -292,9 +320,19 @@ public class AutoresService {
 			.chapter(true).verses(true)
 			.regexChapter("^((LIBRO|PREFACIO).*)").regexVerses("^(\\d+)\\..*")
 			.chapterKey(null).verseKey(null).joiningKey("\n").build());
+		complex.put("Concilios Ecuménicos", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter("^(Concilio Ecuménico.*)").regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("Concilios de la Iglesia Católica Romana", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter("^(Concilio .*)").regexVerses(null)
+			.joiningKey("\n").build());
 	}
     
-    public static RecordVo verse(int verseId, String base) throws SQLException, IOException {
+    public static RecordVo verse(int verseId, String base) throws SQLException {
 		if(verseId == 0)
 			return null;
 
@@ -316,7 +354,7 @@ public class AutoresService {
 		}
 	}
 
-    public static List<RecordVo> concordancia(String in, String base, boolean highlight) throws SQLException, IOException {
+    public static List<RecordVo> concordancia(String in, String base, boolean highlight) throws SQLException {
 		if(in == null || in.trim().length() == 0)
 			return null;
 		
@@ -327,13 +365,14 @@ public class AutoresService {
 				"CASE when instr(lower(v.text), 'siempre') - 30 < 0 THEN instr(lower(v.text),'siempre') ELSE instr(lower(v.text),'siempre') - 30 end, " + 
 				"CASE WHEN length('siempre') + 70 <= length(v.text) THEN length('siempre') + 70 ELSE length(v.text) end) " +
 				"|| ' ' || '(' || (case when c.name is null then '' else c.name || ', ' end) || b.parent || ', ' || " +
-				"(case when b.name = b.parent then '' else b.name end) || ' ' || coalesce(c.name,'') || ' ' || " +
+				"(case when b.name = b.parent then '' else b.name end) || ' ' || coalesce(cp.name,'') || ' ' || " +
 				"(case when v.verse > 0 then v.verse else '' end) || ')'" +
 				"from verse v inner join book b on (v.book_id = b.id) left join autor c on (c.longname = b.autor) " +
 				"left join chapter cp on (cp.id = v.chapter_id) " +
-				"where v.text like '% " + in + "%' order by b.autor, b.parent, b.name";
+				"where v.text like '%' || ? || '%' order by b.autor, b.parent, b.name";
 			sql = sql.replaceAll("siempre", in.toLowerCase());
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setString(1, in);
 				result = st.executeQuery();
 				while(result.next()) {
 					RecordVo b = new RecordVo();
@@ -355,18 +394,20 @@ public class AutoresService {
 		return res;
 	}
 
-    public static ContentVo readContents(int bookId, int chapter, String base) throws SQLException, IOException {
+    public static ContentVo readContents(int bookId, int chapter, String base) throws SQLException {
 		if(bookId == 0)
 			return null;
 		
 		List<String> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.text from verse v where v.book_id = " + bookId;
+			String sql = "select v.text from verse v where v.book_id = ?";
 			if(chapter > 0)
-				sql = sql + " and v.chapter_id = '" + chapter + "'";
-			System.out.println(sql);
+				sql = sql + " and v.chapter_id = ?";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setInt(1, bookId);
+				if(chapter > 0)
+					st.setInt(2, chapter);
 				result = st.executeQuery();
 				while(result.next()) {
 					res.add(result.getString(1));
@@ -390,7 +431,22 @@ public class AutoresService {
 		}
 	}
 
-	public static Book bookForVerse(int verseId, String base) throws SQLException, IOException {
+	public static int chapterId(int bookId, String name, String base) throws SQLException {
+		ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select id from chapter where book_id = ? and name = ?";
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setInt(1, bookId);
+				st.setString(2, name);
+				result = st.executeQuery();
+				if(result.next()) {
+					return result.getInt(1);
+				} else return 0;
+			}
+		}
+	}
+
+	public static Book bookForVerse(int verseId, String base) throws SQLException {
 		if(verseId == 0)
 			return null;
 
@@ -413,12 +469,11 @@ public class AutoresService {
 		}
 	}
 
-	public static List<ItemVo> chapters(int bookId, String base) throws SQLException, IOException {
+	public static List<ItemVo> chapters(int bookId, String base) throws SQLException {
 		if(bookId == 0)
 			return null;
 
 		List<ItemVo> res = new ArrayList<>();
-		//res.add(new SelectItem(0, "TODOS"));
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
 			String sql = "select c.id, c.name from chapter c where c.book_id = " + bookId;
@@ -432,7 +487,7 @@ public class AutoresService {
 		return res;
 	}
 
-	public static List<ItemVo> chaptersForVerse(int verseId, String base) throws SQLException, IOException {
+	public static List<ItemVo> chaptersForVerse(int verseId, String base) throws SQLException {
 		if(verseId == 0)
 			return null;
 
@@ -451,7 +506,7 @@ public class AutoresService {
 		return res;
 	}
 
-	public static List<ItemVo> booksForVerse(int verseId, String base) throws SQLException, IOException {
+	public static List<ItemVo> booksForVerse(int verseId, String base) throws SQLException {
 		if(verseId == 0)
 			return null;
 
@@ -470,14 +525,14 @@ public class AutoresService {
 		return res;
 	}
 
-    public static Book book(int bookId, String base) throws SQLException, IOException {
+    public static Book book(int bookId, String base) throws SQLException {
 		if(bookId == 0)
 			return null;
 
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.title, v.autor, v.name, v.parent, v.destination, v.bookDate "
-					+ "from book v where v.id = " + bookId;
+			String sql = "select v.title, coalesce(c.name, ''), v.name, v.parent, v.destination, v.bookDate "
+					+ "from book v left join autor c on (c.longname = v.autor) where v.id = " + bookId;
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				result.next();
@@ -495,11 +550,14 @@ public class AutoresService {
 		}
 	}
 
-	public static int bookId(String name, String parent, String autor, String base) throws SQLException, IOException {
+	public static int bookId(String name, String parent, String autor, String base) throws SQLException {
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select id from book where parent = '%s' and name = '%s' and autor = '%s'", parent, name, autor);
+			String sql = "select id from book where parent = ? and name = ? and autor = ?";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setString(1, parent);
+				st.setString(2, name);
+				st.setString(3, autor);
 				result = st.executeQuery();
 				if(result.next())
 					return result.getInt(1);
@@ -508,7 +566,7 @@ public class AutoresService {
 		}
 	}
 
-	public static void deleteVerses(int bookId, String base) throws SQLException, IOException {
+	public static void deleteVerses(int bookId, String base) throws SQLException {
 		System.out.println("Borrando versos libro " + bookId);
 		try (Connection conn = db.connection(base)) {
 			String sql = "delete from verse where book_id = " + bookId;
@@ -518,25 +576,12 @@ public class AutoresService {
 		}
 	}
 
-	public static void deleteChapters(int bookId, String base) throws SQLException, IOException {
+	public static void deleteChapters(int bookId, String base) throws SQLException {
 		System.out.println("Borrando capitulos libro " + bookId);
 		try (Connection conn = db.connection(base)) {
 			String sql = "delete from chapter where book_id = " + bookId;
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				st.executeUpdate();
-			}
-		}
-	}
-
-    public static int max(String table, String base) throws SQLException {
-		ResultSet result = null;
-		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select max(id) from " + table);
-			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				result = st.executeQuery();
-				if(result.next()) {
-					return (int)result.getLong(1);
-				} else return 0;
 			}
 		}
 	}
@@ -621,7 +666,7 @@ public class AutoresService {
 		try (Connection conn = db.connection(base)) {
 			conn.setAutoCommit(false);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				int z = max("notes", base) + 1;
+				int z = DBUtil.max("notes", base) + 1;
 				int i = 0;
 				for (NoteBibleVo o : notes) {
 					st.setInt(1, z++);
@@ -646,7 +691,7 @@ public class AutoresService {
 		try (Connection conn = db.connection(base)) {
 			conn.setAutoCommit(false);
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				int z = max("notes", base) + 1;
+				int z = DBUtil.max("notes", base) + 1;
 				int i = 0;
 				for (NoteBibleVo o : notes) {
 					st.setInt(1, z++);
@@ -668,27 +713,20 @@ public class AutoresService {
 		}
 	}
 
-	public static String readNotes(int bookId, String base, String chapter) throws SQLException, IOException {
+	public static String readNotes(int bookId, int chapter, String base) throws SQLException {
 		if(bookId == 0)
 			return null;
 		
 		List<String> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.text from notes v where v.book_id = " + bookId + " and v.chapter = '" + chapter + "'";
+			String sql = "select v.text from notes v where v.book_id = ? and v.chapter = ?";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setInt(1, bookId);
+				st.setInt(2, chapter);
 				result = st.executeQuery();
 				while(result.next())
 					res.add(result.getString(1));
-			}
-
-			if(res.isEmpty()) {
-				sql = "select v.text from notes v where v.book_id = " + bookId;
-				try (PreparedStatement st = conn.prepareStatement(sql)) {
-					result = st.executeQuery();
-					while(result.next())
-						res.add(result.getString(1));
-				}
 			}
 		}
 		
@@ -736,7 +774,7 @@ public class AutoresService {
 					deleteChapters(b.getId(), base);
 				} else {
 					System.out.println("Insertando: " + b.getParent() + ": " + b.getName() + " " + (cont++) + " de " + total);
-					b.setId(max("book", base) + 1);
+					b.setId(DBUtil.max("book", base) + 1);
 					String sql = "insert into book (id, name, parent, title, autor, destination, bookDate) values (?, ?, ?, ?, ?, ?, ?)";
 					try (PreparedStatement st = conn.prepareStatement(sql)) {
 						st.setInt(1, b.getId());
@@ -754,7 +792,7 @@ public class AutoresService {
 				int i = 0;
 				if(chps) {
 					String sql = "insert into chapter (id, book_id, name) values (?, ?, ?)";
-					int z = max("chapter", base);
+					int z = DBUtil.max("chapter", base);
 					Set<String> chapters = new LinkedHashSet<>();
 					try (PreparedStatement st = conn.prepareStatement(sql)) {
 						for (Paragraph o : b.getParagraphs()) {
@@ -779,8 +817,8 @@ public class AutoresService {
 					}
 				}
 				
-				String sql = "insert into verse (id, book_id, text, verse, chapter, chapter_id) values (?, ?, ?, ?, ?, ?)";
-				int z = max("verse", base) + 1;
+				String sql = "insert into verse (id, book_id, text, verse, chapter_id) values (?, ?, ?, ?, ?)";
+				int z = DBUtil.max("verse", base) + 1;
 				i = 0;
 				try (PreparedStatement st = conn.prepareStatement(sql)) {
 					for (Paragraph o : b.getParagraphs()) {
@@ -788,8 +826,7 @@ public class AutoresService {
 						st.setInt(2, b.getId());
 						st.setString(3, o.getText());
 						st.setInt(4, o.getVerse());
-						st.setString(5, o.getChapter());
-						st.setInt(6, o.getChapterId());
+						st.setInt(5, o.getChapterId());
 						
 						st.addBatch();
 						if(i%5000 == 0)

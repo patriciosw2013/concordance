@@ -27,7 +27,7 @@ public class TextUtils {
 	}
 
 	public static int extractNumber(String in) {
-        Pattern p = Pattern.compile("\\d+");
+        Pattern p = Pattern.compile("^\\d+");
         Matcher m = p.matcher(in);
 		if(m.find())
 			return Integer.parseInt(m.group());

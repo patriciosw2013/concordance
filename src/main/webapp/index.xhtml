@@ -33,6 +33,16 @@
         .ui-scrollpanel-hbar {
             overflow-x: initial;
         }
+
+        .panelGroup {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .align-right {
+            margin-left: auto;
+        }
     </style>
 </h:head>
 <h:body>
@@ -46,7 +56,8 @@
         <p:messages id="messages" showDetail="true" closable="true">
             <p:autoUpdate />
         </p:messages>
-        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade"
+            closeOnEscape="true">
             <p:scrollPanel mode="native" id="pnlNotes" style="width: 450px; height: 300px;">
                 <h:outputText value="#{concordanciaController.notes}" styleClass="preformatted" escape="false" />
             </p:scrollPanel>
@@ -63,36 +74,43 @@
                 <p:selectOneMenu id="option" value="#{concordanciaController.base}">
                     <f:selectItems var="o" value="#{concordanciaController.bases}" itemLabel="#{o}" itemValue="#{o}" />
                 </p:selectOneMenu>
-				
-				<p:divider layout="vertical" style="width: 100px;" />
 
-                <p:link href="http://localhost:8080/concordance/evaluate.xhtml" value="Evaluar" target="_blank" style="margin-left: 10px;" />
+                <p:divider layout="vertical" style="width: 100px;" />
 
-                <p:link href="http://localhost:8080/concordance/reading.xhtml" value="Lectura" target="_blank" style="margin-left: 10px;" />
+                <p:link href="http://localhost:8080/concordance/evaluate.xhtml" value="Evaluar" target="_blank"
+                    style="margin-left: 10px;" />
 
-                <p:link href="http://localhost:8080/concordance/interlineal.xhtml" value="Interlineal" target="_blank" style="margin-left: 10px;" />
+                <p:link href="http://localhost:8080/concordance/reading.xhtml" value="Lectura" target="_blank"
+                    style="margin-left: 10px;" />
 
-                <p:link href="http://localhost:8080/concordance/search.xhtml" value="Biblia" target="_blank" style="margin-left: 10px;" />
+                <p:link href="http://localhost:8080/concordance/interlineal.xhtml" value="Interlineal" target="_blank"
+                    style="margin-left: 10px;" />
+
+                <p:link href="http://localhost:8080/concordance/search.xhtml" value="Biblia" target="_blank"
+                    style="margin-left: 10px;" />
             </h:panelGrid>
             <p:panelGrid columns="2" layout="grid" style="padding: 20px;">
                 <p:row>
                     <p:column></p:column>
                     <p:column>
-                        <h:panelGroup id="colTitle">
-                            <h:outputText id="txtTitle" style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px;"
+                        <h:panelGroup id="colTitle" styleClass="panelGroup">
+                            <h:outputText id="txtTitle"
+                                style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px;"
                                 value="#{concordanciaController.title}" />
-                            
-                            <p:commandButton value="" rendered="#{not empty concordanciaController.notes}" type="button" style="width:30px;" 
-                                icon="pi pi-check" onclick="PF('dlg1').show()"/>
+
+                            <p:commandButton value="" rendered="#{not empty concordanciaController.notes}" type="button"
+                                icon="pi pi-tag"
+                                styleClass="align-right rounded-button ui-button-secondary ui-button-outlined"
+                                style="height:32px;width:32px;margin-left:10px;" onclick="PF('dlg1').show()" />
                         </h:panelGroup>
                     </p:column>
                 </p:row>
                 <p:selectOneListbox id="searchItems" value="#{concordanciaController.verseId}" scrollHeight="520"
                     style="width: 650px; height: 520px; font-size: 14px;" widgetVar="selIt">
-                    <f:selectItems var="o" value="#{concordanciaController.verses}" itemLabel="#{o.text}" itemLabelEscaped="false"
-                        itemValue="#{o.recordId}" />
-                    <p:ajax event="itemSelect" listener="#{concordanciaController.onSelect()}" update="pnl,modalNotes,colTitle"
-                        oncomplete="copyTxt(PF('selIt').focusedItem.text());" />
+                    <f:selectItems var="o" value="#{concordanciaController.verses}" itemLabel="#{o.text}"
+                        itemLabelEscaped="false" itemValue="#{o.recordId}" />
+                    <p:ajax event="itemSelect" listener="#{concordanciaController.onSelect()}"
+                        update="pnl,modalNotes,colTitle" oncomplete="copyTxt(PF('selIt').focusedItem.text());" />
                 </p:selectOneListbox>
 
                 <p:scrollPanel mode="native" id="pnl" style="width: 700px; height: 520px;">

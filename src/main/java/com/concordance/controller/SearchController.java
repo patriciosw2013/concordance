@@ -32,9 +32,15 @@ public class SearchController implements Serializable {
 
     @PostConstruct
     public void init() {
-        bases = ConcordanceService.basesBible();
-        cita = new CitaVo(bases.get(0));
-        citaPar = new CitaVo(bases.get(1));
+        try {
+            bases = ConcordanceService.basesBible();
+            cita = new CitaVo(bases.get(0));
+            citaPar = new CitaVo(bases.get(1));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+            e.printStackTrace();
+        }
     }
 
     public void search() {
@@ -53,14 +59,16 @@ public class SearchController implements Serializable {
     public void navigate(int citaId, int direction) {
         try {
             CitaVo ct = citaId == 1 ? cita : citaPar;
-            if(direction == 0) {
-                if(ct.getChapter() > 1)
+            if (direction == 0) {
+                if (ct.getChapter() > 1)
                     ct.setChapter(ct.getChapter() - 1);
-                else return;
+                else
+                    return;
             } else {
-                if(ct.getChapter() < ct.getChapters().get(ct.getChapters().size() - 1).getCodigo())
+                if (ct.getChapter() < ct.getChapters().get(ct.getChapters().size() - 1).getCodigo())
                     ct.setChapter(ct.getChapter() + 1);
-                else return;
+                else
+                    return;
             }
             loadContents(citaId);
         } catch (Exception e) {
@@ -68,12 +76,12 @@ public class SearchController implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
             e.printStackTrace();
         }
-	}
+    }
 
     public void loadContents(int citaId) {
         try {
             CitaVo ct = citaId == 1 ? cita : citaPar;
-            if(TextUtils.isEmpty(ct.getBook())) {
+            if (TextUtils.isEmpty(ct.getBook())) {
                 return;
             }
             System.out.println("Cargando contenido de " + ct.cita());
@@ -84,7 +92,8 @@ public class SearchController implements Serializable {
             ct.setBookId(BibleUtil.bookId(ct.getBook(), ct.getVersion()));
             input = ct.citaSimple();
 
-            if(ct.getBookId() == 0) return;
+            if (ct.getBookId() == 0)
+                return;
             ResultsVo res = ConcordanceService.readContents(ct);
             ct.setTitle(res.getResults().getChapter());
             ct.setTxt(res.getResults().getContents().stream().collect(Collectors.joining("\n")));
