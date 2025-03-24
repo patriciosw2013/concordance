@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class StrongDetailVo {
 
+    private int wordId;
     private int strongId;
     private String language;
     private String defGlobal;

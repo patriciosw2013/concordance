@@ -9,7 +9,5 @@ public class NoteBibleVo {
 
     private int bookId;
     private int chapterId;
-    private int verse;
-    private int type;
     private String text;
 }

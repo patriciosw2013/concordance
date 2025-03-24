@@ -12,8 +12,10 @@ public class InterlinealVo {
     private int bookId;
     private int chapter;
     private int verse;
+    private int wordId;
     private int strongId;
     private String word;
+    private String language;
     private String type;
     private String meaning;
     private String morfologic;

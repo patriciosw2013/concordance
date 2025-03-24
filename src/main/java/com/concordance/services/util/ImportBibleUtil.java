@@ -18,6 +18,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
+
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.Verse;
@@ -323,30 +327,93 @@ public class ImportBibleUtil {
 		String fileHtml = String.format("D:\\Desarrollo\\html_%s.txt", base);
 		if(!existHTML) {
             try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
-                int idVersion = 103; //823 vulgata
+                int idVersion = 149; //823 vulgata, 103 NBLA
                 for(int testId : new int[]{1, 2}) {
                     for(ItemVo b : BibleUtil.booksList(testId, base)) {
                         for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
                             String url = String.format("https://www.bible.com/es/bible/%s/%s.%s.%s", //823  - VULG 
                             idVersion, b.getDescripcion(), c, base);
                             System.out.println(url);
-                            String txt = WebUtil.readWeb(url, "div.ChapterContent_reader__Dt27r", false);
-							
+                            String txt = WebUtil.readWeb(url, "div.ChapterContent_book__VkdB2", false);
 							if(txt.contains("Este capítulo no está disponible en esta versión"))
 								throw new RuntimeException("Pagina no encontrada");
+							writer.println(">>>>>>");
+							writer.println(b.getCodigo() + " " + c);
+							writer.println(txt);
 
-							List<String> verses = WebUtil.readTags(txt, "span.chapterContent_verse__57FIw");
+							/*List<String> verses = WebUtil.readTags(txt, "span.chapterContent_verse__57FIw");
                             writer.println(">>>>>>");
 							writer.println(b.getValor() + " " + c);
 							writer.println(txt);
 							for(String o : verses)
-                            	writer.println(o);
-                            break;
+                            	writer.println(o);*/
+                            //break;
                         }
-                        break;
+                        //break;
                     }
                 }
             }
+		}
+
+		try (PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
+			List<RecordVo> rds = new ArrayList<>();
+			for (List<String> res : ListUtils.split(Files.readAllLines(new File(fileHtml).toPath(),
+					StandardCharsets.UTF_8), ">>>>>>")) {
+				String[] codes = res.get(0).split(" ");
+				int bookId = Integer.parseInt(codes[0]);
+				int c = Integer.parseInt(codes[1]);
+
+				String txt = res.subList(1, res.size()).stream().collect(Collectors.joining(" "));
+				List<Node> txts = WebUtil.readHtmlChilds(txt, "div.ChapterContent_chapter__uvbXo").get(0);
+				Map<Integer, RecordVo> vrs = new LinkedHashMap<>();
+				RecordVo v = null;
+				int noteId = 1;
+				String title = null;
+				for (Node t : txts) {
+					if (t.attr("class").equals("ChapterContent_s__r_36F")) {
+						Elements ins = WebUtil.readNodeTags(t.outerHtml(), "span");
+						title = ins.get(0).text();
+					} if (t.attr("class").equals("ChapterContent_r___3KRx") || t.attr("class").equals("ChapterContent_d__OHSpy")) {
+						Elements ins = WebUtil.readNodeTags(t.outerHtml(), "span");
+						title = title == null ? "" : title.concat("\n");
+						title = title.concat(ins.stream().map(j -> j.text()).distinct().collect(Collectors.joining()));
+					} else if (t.attr("class").equals("ChapterContent_p__dVKHb") 
+						|| t.attr("class").equals("ChapterContent_m__3AINJ")
+						|| t.attr("class").equals("ChapterContent_nb__WvM5I")
+						|| t.attr("class").equals("ChapterContent_q__EZOnh")) {
+						Elements ins = WebUtil.readNodeTags(t.outerHtml(), "span");
+						for (Element z : ins) {
+							if (z.attr("class").equals("ChapterContent_label__R2PLt")) {
+								if ("#".equals(z.text())) {
+									v.setText(v.getText().concat("[" + noteId + "]"));
+								} else {
+									int vr = Integer.parseInt(z.text());
+									v = new RecordVo(bookId, c, vr);
+									v.setNotes(new ArrayList<>());
+									v.setDescription(title);
+									title = null;
+									vrs.put(vr, v);
+								}
+							} else if (v != null) {
+								if (z.attr("class").equals("ChapterContent_content__RrUqA")) {
+									if(TextUtils.isEmpty(z.text())) continue;
+									v.setText(v.getText() == null ? z.text().trim()
+											: v.getText().concat(
+													t.attr("class").equals("ChapterContent_q__EZOnh") ? " \n" : " ")
+													.concat(z.text().trim()));
+								} else if (z.attr("class")
+										.equals("ChapterContent_body__O3qjr"))
+									v.getNotes().add(new ItemVo(noteId++, z.text()));
+							}
+						}
+					}
+				}
+				rds.addAll(vrs.values());
+			}
+			System.out.println(rds.size());
+			createVersesComplex(rds, base);
+			for (RecordVo o : rds)
+				writer.println(o);
 		}
 	}
 
@@ -549,6 +616,57 @@ public class ImportBibleUtil {
 		}
 	}
 
+	public static void createVersesComplex(List<RecordVo> verses, String base) throws SQLException {
+		try (Connection conn = db.connection(base)) {
+			conn.setAutoCommit(false);
+			int z = max("verse2", base) + 1;
+			String sql = "insert into verse2 (id, book_id, chapter, verse, text, title) values (?, ?, ?, ?, ?, ?)";
+			int i = 0;
+			System.out.println("Creando versos");
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				for (RecordVo o : verses) {
+					st.setInt(1, z++);
+					st.setInt(2, o.getBookId());
+					st.setInt(3, o.getChapterId());
+					st.setInt(4, o.getVerse());
+					st.setString(5, o.getText());
+					st.setString(6, o.getDescription());
+					
+					st.addBatch();
+					if(i%5000 == 0)
+					st.executeBatch();
+				
+					i++;
+				}
+				st.executeBatch();
+				conn.commit();
+			}
+
+			System.out.println("Creando notas");
+			z = max("notes", base) + 1;
+			sql = "insert into notes (id, book_id, text, chapter) values (?, ?, ?, ?)";
+			i = 0;
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				for (RecordVo o : verses.stream().filter(j -> !j.getNotes().isEmpty()).collect(Collectors.toList())) {
+					for (ItemVo it : o.getNotes()) {
+						st.setInt(1, z++);
+						st.setInt(2, o.getBookId());
+						st.setString(3, it.getCodigo() + ". " + it.getValor());
+						st.setInt(4, o.getChapterId());
+
+						st.addBatch();
+						if (i % 5000 == 0)
+							st.executeBatch();
+
+						i++;
+					}
+				}
+				st.executeBatch();
+				conn.commit();
+			}
+		}
+	}
+
     public static int max(String table, String base) throws SQLException {
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
@@ -565,7 +683,7 @@ public class ImportBibleUtil {
 	public static void main(String[] args) {
 		try {
 			//loadText();
-			//importBookYouversion2("NBLA", false);
+			importBookYouversion2("RVR1960", true);
 			//read("D:\\Desarrollo\\books");
 			//loadBible("NBLA");
 			//loadBibleCatolic("Latinoamericana", true);

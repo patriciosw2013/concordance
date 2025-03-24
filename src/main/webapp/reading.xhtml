@@ -84,11 +84,15 @@
                             value="#{readingController.title}" />
 
                         <h:panelGroup styleClass="right-aligned">
+                            <p:commandButton value="" icon="pi pi-file-pdf" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                                rendered="false"
+                                style="height:32px;width:32px;margin-left:10px;" action="#{readingController.exportarPDF}" ajax="false" />
+
                             <p:commandButton value="" rendered="#{not empty readingController.notes}" type="button"
-                                icon="pi pi-tag" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                                icon="pi pi-pen-to-square" styleClass="rounded-button ui-button-secondary ui-button-outlined"
                                 style="height:32px;width:32px;margin-left:10px;" onclick="PF('dlg1').show()" />
 
-                            <p:selectOneMenu id="chapters" value="#{readingController.chapter}"
+                            <p:selectOneMenu id="chapters" value="#{readingController.chapter}" style="max-width: 400px;"
                                 rendered="#{not empty readingController.chapters}">
                                 <f:selectItems var="o" value="#{readingController.chapters}" itemLabel="#{o.valor}"
                                     itemValue="#{o.codigo}" />
@@ -100,8 +104,8 @@
                 </h:panelGroup>
 
                 <p:treeTable id="bookTree" value="#{readingController.books}" var="o" size="small"
-                    selection="#{readingController.book}" selectionMode="single" scrollable="true" scrollHeight="520"
-                    style="width: 100%; height: 100%; font-size: 14px;">
+                    selection="#{readingController.book}" selectionMode="single" scrollable="true" scrollHeight="510"
+                    style="width: 100%; font-size: 14px;">
                     <p:ajax event="select" listener="#{readingController.onSelect}"
                         update="updateForm:pnl,updateForm:modalNotes,updateForm:colTitle" />
                     <p:column>

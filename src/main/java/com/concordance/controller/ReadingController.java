@@ -1,5 +1,7 @@
 package com.concordance.controller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
@@ -11,14 +13,19 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.concordance.services.ConcordanceService;
 import com.concordance.services.vo.AutorVo;
-import com.concordance.services.vo.ResultsVo;
 import com.concordance.services.vo.ItemVo;
+import com.concordance.services.vo.ResultsVo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -119,5 +126,36 @@ public class ReadingController implements Serializable {
         chapters = res.getChapters();
         System.out.println("txt: " + txt.length());
         notes = res.getNotes();
+    }
+
+    public void exportarPDF() throws IOException {
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage();
+        document.addPage(page);
+        PDPageContentStream contentStream = new PDPageContentStream(document, page);
+
+        contentStream.setFont(PDType1Font.HELVETICA, 9);
+        contentStream.beginText();
+        contentStream.newLineAtOffset(30, 40);
+
+        String[] lineas = txt.split("\n");
+        for (String linea : lineas) {
+            contentStream.showText(linea);
+            contentStream.newLineAtOffset(0, -15);
+        }
+
+        contentStream.endText();
+        contentStream.close();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        document.save(byteArrayOutputStream);
+        document.close();
+
+        HttpServletResponse response = (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment;filename=exported_text.pdf");
+        response.getOutputStream().write(byteArrayOutputStream.toByteArray());
+        response.getOutputStream().flush();
+        FacesContext.getCurrentInstance().responseComplete();
     }
 }

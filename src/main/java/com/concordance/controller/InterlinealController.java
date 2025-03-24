@@ -1,6 +1,5 @@
 package com.concordance.controller;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
@@ -38,8 +37,8 @@ public class InterlinealController implements Serializable {
     private String simpleInterlineal;
     private StrongDetailVo strong;
     private CitaVo cita;
-    private int testamentId;
     private String base;
+    private String language;
     private String strongInput;
     private List<String> bases;
     private List<ItemVo> verses;
@@ -70,7 +69,6 @@ public class InterlinealController implements Serializable {
             }
 
             System.out.println(cita.cita());
-            testamentId = BibleUtil.testamentId(cita.getBookId(), cita.getVersion());
             verses = BibleUtil.verses(cita.getBookId(), cita.getChapter(), cita.getVersion());
             search();
         } catch (Exception e) {
@@ -87,6 +85,7 @@ public class InterlinealController implements Serializable {
             
         reference = vs.get(0).getText();
         words = InterlinealService.interlineal(cita.getBookId(), cita.getChapter(), cita.getVerseIni(), base);
+        language = words.get(0).getLanguage();
         input = null;
     }
 
@@ -111,10 +110,10 @@ public class InterlinealController implements Serializable {
         }
     }
 
-    public void loadReferences(int strongId) {
+    public void loadReferences(int wordId) {
         try {
-            System.out.println("Cargando referencias strongId: " + strongId);
-            references = InterlinealService.strongReference(strongId, testamentId, "RVR1960", base);
+            System.out.println("Cargando referencias strongId: " + wordId);
+            references = InterlinealService.strongReference(wordId, "RVR1960", base);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
@@ -122,18 +121,7 @@ public class InterlinealController implements Serializable {
         }
     }
 
-    public void loadReferences(int strongId, int testamentId) {
-        try {
-            System.out.println("Cargando referencias strongId: " + strongId);
-            references = InterlinealService.strongReference(strongId, testamentId, "RVR1960", base);
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
-            e.printStackTrace();
-        }
-    }
-
-    public void loadReferences(String word) {
+    public void loadReferencesForWord(String word) {
         try {
             System.out.println("Cargando referencias palabra: " + word);
             references = InterlinealService.strongReference(word, base);
@@ -144,9 +132,10 @@ public class InterlinealController implements Serializable {
         }
     }
 
-    public void loadStrong(int strongId) {
+    public void loadStrong(int wordId) {
         try {
-            loadStrongDet(strongId);
+            System.out.println("Cargando strong strongId: " + wordId);
+            strong = InterlinealService.strongDetail(wordId);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
@@ -157,8 +146,9 @@ public class InterlinealController implements Serializable {
     public void loadStrongParam() {
         try {
             int strongId = Integer.parseInt(
-                    FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("param1"));
-            loadStrongDet(strongId);
+                    FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("num"));
+            String language = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("lg");
+            strong = InterlinealService.strongDetail(strongId, language);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
@@ -166,15 +156,10 @@ public class InterlinealController implements Serializable {
         }
     }
 
-    private void loadStrongDet(int strongId) throws SQLException, IOException {
-        System.out.println("Cargando strong strongId: " + strongId);
-        strong = InterlinealService.strongDetail(strongId, testamentId, base);
-    }
-
     public void loadNotationDetail(String code) {
         try {
             System.out.println("Cargando morfologia: " + code);
-            notationDetail = InterlinealService.notationDetail(code, testamentId, base);
+            notationDetail = InterlinealService.notationDetail(code, language);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
@@ -194,7 +179,7 @@ public class InterlinealController implements Serializable {
 
     public void findStrong() {
         try {
-            strongs = InterlinealService.findStrong(strongInput, base);
+            strongs = InterlinealService.findStrong(strongInput);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));

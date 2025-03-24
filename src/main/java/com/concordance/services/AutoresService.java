@@ -29,7 +29,6 @@ import com.concordance.services.vo.ContentVo;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.Paragraph;
 import com.concordance.services.vo.RecordVo;
-import com.concordance.services.vo.bible.NoteBibleVo;
 
 public class AutoresService {
 
@@ -322,13 +321,15 @@ public class AutoresService {
 			.chapterKey(null).verseKey(null).joiningKey("\n").build());
 		complex.put("Concilios Ecuménicos", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(true).verses(true)
 			.regexChapter("^(Concilio Ecuménico.*)").regexVerses(null)
 			.joiningKey("\n").build());
 		complex.put("Concilios de la Iglesia Católica Romana", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(true).verses(true)
 			.regexChapter("^(Concilio .*)").regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("Denzinger", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(SIMBOLOS|DOCUMENTOS.*)").regexVerses("^D-(\\d+).*")
 			.joiningKey("\n").build());
 	}
     
@@ -660,59 +661,7 @@ public class AutoresService {
 		
 		return res;
 	}
-
-	public static void createNotes2(List<NoteBibleVo> notes, String base) throws SQLException {
-		String sql = "insert into notes (id, book_id, text, chapter) values (?, ?, ?, ?)";
-		try (Connection conn = db.connection(base)) {
-			conn.setAutoCommit(false);
-			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				int z = DBUtil.max("notes", base) + 1;
-				int i = 0;
-				for (NoteBibleVo o : notes) {
-					st.setInt(1, z++);
-					st.setInt(2, o.getBookId());
-					st.setString(3, o.getText());
-					st.setInt(4, o.getChapterId());
-					
-					st.addBatch();
-					if(i%5000 == 0)
-                        st.executeBatch();
-                    
-                    i++;
-				}
-				st.executeBatch();
-				conn.commit();
-			}
-		}
-	}
-
-	public static void createNotes(List<NoteBibleVo> notes, String base) throws SQLException {
-		String sql = "insert into notes (id, book_id, text, chapter, verse, type) values (?, ?, ?, ?, ?, ?)";
-		try (Connection conn = db.connection(base)) {
-			conn.setAutoCommit(false);
-			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				int z = DBUtil.max("notes", base) + 1;
-				int i = 0;
-				for (NoteBibleVo o : notes) {
-					st.setInt(1, z++);
-					st.setInt(2, o.getBookId());
-					st.setString(3, o.getText());
-					st.setInt(4, o.getChapterId());
-					st.setInt(5, o.getVerse());
-					st.setInt(6, o.getType());
-					
-					st.addBatch();
-					if(i%5000 == 0)
-                        st.executeBatch();
-                    
-                    i++;
-				}
-				st.executeBatch();
-				conn.commit();
-			}
-		}
-	}
-
+	
 	public static String readNotes(int bookId, int chapter, String base) throws SQLException {
 		if(bookId == 0)
 			return null;

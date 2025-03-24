@@ -10,5 +10,5 @@ public class StrongFindVo {
     private int codigo;
     private String word;
     private String meaning;
-    private int testamentId;
+    private int wordId;
 }

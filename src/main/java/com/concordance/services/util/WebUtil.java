@@ -86,6 +86,32 @@ public class WebUtil {
         }
         return res;
     }
+    
+    public static List<String> readHtmlTags(String in, String tag) throws IOException {
+        Document document = Jsoup.parse(in);
+        Elements divs = document.select(tag);
+        List<String> res = new ArrayList<>();
+        for (Element span : divs) {
+            res.add(span.html());
+        }
+        return res;
+    }
+
+    public static Elements readNodeTags(String in, String tag) throws IOException {
+        Document document = Jsoup.parse(in);
+        Elements divs = document.select(tag);
+        return divs;
+    }
+
+    public static List<List<Node>> readHtmlChilds(String in, String tag) throws IOException {
+        Document document = Jsoup.parse(in);
+        Elements divs = document.select(tag);
+        List<List<Node>> res = new ArrayList<>();
+        for (Element span : divs) {
+            res.add(span.childNodes());
+        }
+        return res;
+    }
 
     public static List<String> readTags(String in, String tag, String attr) throws IOException {
         Document document = Jsoup.parse(in);

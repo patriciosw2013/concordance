@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.concordance.constants.Const;
-import com.concordance.services.util.AutoresUtil;
 import com.concordance.services.util.BibleUtil;
 import com.concordance.services.util.DBUtil;
 import com.concordance.services.util.NotesUtil;
@@ -63,7 +62,7 @@ public class ConcordanceService {
             notes = AutoresService.readNotes(book.getId(), vr.getChapterId(), base);
             label = label(book, contents.getChapter());
         } else if (DBUtil.type(base) == Const.TYPE_NOTES) {
-            book = NotesUtil.book(verseId, base);
+            book = NotesUtil.bookForVerse(verseId, base);
             vr = NotesUtil.verse(verseId, base);
             contents = AutoresService.readContents(book.getId(), vr.getChapterId(), base);
             label = label(book, contents.getChapter());

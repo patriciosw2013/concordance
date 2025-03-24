@@ -71,7 +71,7 @@
             <h:panelGrid columns="4" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 400px;">
                 <p:inputText id="txt-input" value="#{searchController.input}" />
 
-                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto"
+                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
                     action="#{searchController.search}" update="searchItems,modalNotes,modalNotesPar" />
             </h:panelGrid>
             <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 20px;" columnClasses="side-left side-right">
@@ -106,16 +106,24 @@
 
                 <p:scrollPanel mode="native" id="pnl" styleClass="panelRead">
 					<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <p:commandLink value="&lt;" action="#{searchController.navigate(1, 0)}" update="updateForm:searchItems"/>
-                        <p:commandLink value="&gt;" action="#{searchController.navigate(1, 1)}" update="updateForm:searchItems"/>
+                        <p:commandLink value="" action="#{searchController.navigate(1, 0)}" update="updateForm:searchItems">
+							<i class="pi pi-caret-left" />
+                        </p:commandLink>
+                        <p:commandLink value="" action="#{searchController.navigate(1, 1)}" update="updateForm:searchItems">
+							<i class="pi pi-caret-right" />
+                        </p:commandLink>
 					</div>
                     <h:outputText value="#{searchController.cita.txt}" styleClass="preformatted" escape="false" />
                 </p:scrollPanel>
 
                 <p:scrollPanel mode="native" id="pnlPar" styleClass="panelRead">
 					<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <p:commandLink value="&lt;" action="#{searchController.navigate(2, 0)}" update="updateForm:searchItems"/>
-                        <p:commandLink value="&gt;" action="#{searchController.navigate(2, 1)}" update="updateForm:searchItems"/>
+                        <p:commandLink value="" action="#{searchController.navigate(2, 0)}" update="updateForm:searchItems">
+							<i class="pi pi-caret-left" />
+                        </p:commandLink>
+                        <p:commandLink value="" action="#{searchController.navigate(2, 1)}" update="updateForm:searchItems">
+							<i class="pi pi-caret-right" />
+                        </p:commandLink>
 					</div>
                     <h:outputText value="#{searchController.citaPar.txt}" styleClass="preformatted" escape="false" />
                 </p:scrollPanel>

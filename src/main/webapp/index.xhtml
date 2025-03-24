@@ -66,7 +66,7 @@
             <h:panelGrid columns="9" style="padding-left: 30px; padding-right: 30px; width: 700px;">
                 <p:inputText id="float-input" value="#{concordanciaController.input}" />
 
-                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto"
+                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
                     action="#{concordanciaController.search}" update="searchItems" />
 
                 <p:divider layout="vertical" style="width: 100px;" />
@@ -99,7 +99,7 @@
                                 value="#{concordanciaController.title}" />
 
                             <p:commandButton value="" rendered="#{not empty concordanciaController.notes}" type="button"
-                                icon="pi pi-tag"
+                                icon="pi pi-pen-to-square"
                                 styleClass="align-right rounded-button ui-button-secondary ui-button-outlined"
                                 style="height:32px;width:32px;margin-left:10px;" onclick="PF('dlg1').show()" />
                         </h:panelGroup>

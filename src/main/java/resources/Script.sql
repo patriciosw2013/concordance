@@ -57,6 +57,13 @@ CREATE TABLE "autor" (
 	"longname"	TEXT
 );
 
+CREATE INDEX "ix_verse_book_id" ON "verse" (
+	"book_id", "chapter"
+);
+CREATE INDEX "ix_verse_verse" ON "verse" (
+	"verse"
+);
+
 insert into autor values (13, 'S. Tomás de Aquino', 'Tomas de Aquino');
 
 CREATE TABLE notes (id integer NOT NULL, 

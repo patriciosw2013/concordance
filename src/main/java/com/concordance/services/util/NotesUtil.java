@@ -55,8 +55,8 @@ public class NotesUtil extends AutoresService {
 
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.title, coalesce(c.name, ''), case when v.name = v.parent then '' else v.name end, v.parent, v.id " +
-				"from book v inner join notes vr on (vr.book_id = v.id) where vr.id = " + verseId;
+			String sql = "select v.title, coalesce(a.name, 'Anonimo'), case when v.name = v.parent then '' else v.name end, v.parent, v.id " +
+				"from book v inner join notes vr on (vr.book_id = v.id) left join autor a on (a.longname = v.autor) where vr.id = " + verseId;
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				result.next();
@@ -78,7 +78,7 @@ public class NotesUtil extends AutoresService {
 
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.book_id, coalesce(c.name, ''), c.id, v.id from notes v left join chapter c on (c.id = v.chapter_id) where v.id = " + verseId;
+			String sql = "select v.book_id, coalesce(c.name, ''), c.id, v.id from notes v left join chapter c on (c.id = v.chapter) where v.id = " + verseId;
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				result = st.executeQuery();
 				result.next();
@@ -147,12 +147,12 @@ public class NotesUtil extends AutoresService {
 				if(type == 2) {
 					String[] aux = b.split(" : ");
 					CitaVo c = BibleUtil.extractRef(aux[0]);
-					res.add(new NoteBibleVo(c.getBookId(), c.getChapter(), c.getVerseIni(), type, aux[1]));
+					res.add(new NoteBibleVo(c.getBookId(), c.getChapter(), aux[1]));
 				} else {
 					/*List<String> foots = TextUtils.segmentos(b, "^([A-Za-záéíóúÁÉÍÓÚ0-9\s]+\s\d+:\d+)\s(.+)$");
 					CitaVo c = BibleUtil.extractRef(foots.get(0));
 					res.add(new NoteBibleVo(c.getBookId(), c.getChapter(), c.getVerseIni(), type, foots.get(1)));*/
-					res.add(new NoteBibleVo(bookId, chapter, 0, type, b));
+					res.add(new NoteBibleVo(bookId, chapter, b));
 				}
 
 			}
@@ -186,15 +186,40 @@ public class NotesUtil extends AutoresService {
 					chapterId = chapter != null ? AutoresService.chapterId(bookId, chapter, base) : 0;
 					continue;
 				}
-				res.add(new NoteBibleVo(bookId, chapterId, 0, 0, x));
+				res.add(new NoteBibleVo(bookId, chapterId, x));
 			}
 
-			if(!simul) createNotes2(res, base);
+			if(!simul) createNotes(res, base);
 			for(NoteBibleVo x: res) {
 				writer.println(x.getBookId() + " " + x.getChapterId() + " " + x.getText());
 			}
 			
 			System.out.println("Notas creadas con exito");
+		}
+	}
+
+	public static void createNotes(List<NoteBibleVo> notes, String base) throws SQLException {
+		String sql = "insert into notes (id, book_id, text, chapter) values (?, ?, ?, ?)";
+		try (Connection conn = db.connection(base)) {
+			conn.setAutoCommit(false);
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				int z = DBUtil.max("notes", base) + 1;
+				int i = 0;
+				for (NoteBibleVo o : notes) {
+					st.setInt(1, z++);
+					st.setInt(2, o.getBookId());
+					st.setString(3, o.getText());
+					st.setInt(4, o.getChapterId());
+					
+					st.addBatch();
+					if(i%5000 == 0)
+                        st.executeBatch();
+                    
+                    i++;
+				}
+				st.executeBatch();
+				conn.commit();
+			}
 		}
 	}
 

@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-    xmlns:p="http://primefaces.org/ui">
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
 
 <h:head>
-    <title>Interlineal</title>
-    <style>
-        .parrafo {
-            text-align: left;
-            padding: 10px !important;
-            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
-        }
+	<title>Interlineal</title>
+	<style>
+		.parrafo {
+			text-align: left;
+			padding: 10px !important;
+			font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+		}
 
-        .task-lists {
-            margin: 10px;
-            padding: 10px;
-            padding-top: 5px;
-            font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
-            color: #282828;
-            background-color: #FFFFFF;
-            text-align: left;
-        }
+		.task-lists {
+			margin: 10px;
+			padding: 10px;
+			padding-top: 5px;
+			font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+			color: #282828;
+			background-color: #FFFFFF;
+			text-align: left;
+		}
 
-        .side-left {
+		.side-left {
 			width: 350px;
 		}
-		
+
 		.side-right {
 			width: 900px;
 		}
-		
+
 		.product-grid-item {
 			background: var(--surface-e);
 			box-shadow: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
@@ -37,74 +37,87 @@
 			margin-bottom: 2rem;
 			padding: 20px;
 		}
-		
+
 		.item-id {
 			height: 40px;
 		}
-		
+
 		.item-type {
 			font-size: 1rem;
 			font-weight: 600;
 		}
-		
+
 		.item-meanign {
 			font-size: 1rem;
 			/*font-weight: bold;*/
 			color: #d9534f;
 		}
-		
+
 		.column-code {
 			display: flex;
 			align-items: flex-start;
-			width:180px;
+			width: 180px;
 			margin: 12px;
 			font-weight: bold;
 			vertical-align: top;
 		}
-		
+
 		.column-descr {
 			display: block;
 			margin: 15px;
 		}
 
-        .odd {
-            background-color: #f2f2f2 !important; /* Color gris claro */
+		.odd {
+			background-color: #f2f2f2 !important;
+			/* Color gris claro */
 			/* color: #ffffff !important; */
-        }
+		}
 
-        .even {
-            background-color: #ffffff !important; /* Color blanco */
-        }
-		
+		.even {
+			background-color: #ffffff !important;
+			/* Color blanco */
+		}
+
 		.encabezado {
 			font-weight: bold;
 			display: flex;
-			justify-content: center; /* Centra el contenido horizontalmente */
-			align-items: center; /* Centra el contenido verticalmente */
-			width: 100%; /* Ocupa el 100% del ancho de su contenedor */
-			text-align: center; /* Centra el texto horizontalmente */
-			background-color: #f2f2f2; /* Color de fondo gris */
-			padding: 5px; /* Añade algo de espacio dentro del label (opcional) */
-			box-sizing: border-box; /* Asegura que el padding no afecte al ancho total */
+			justify-content: center;
+			/* Centra el contenido horizontalmente */
+			align-items: center;
+			/* Centra el contenido verticalmente */
+			width: 100%;
+			/* Ocupa el 100% del ancho de su contenedor */
+			text-align: center;
+			/* Centra el texto horizontalmente */
+			background-color: #f2f2f2;
+			/* Color de fondo gris */
+			padding: 5px;
+			/* Añade algo de espacio dentro del label (opcional) */
+			box-sizing: border-box;
+			/* Asegura que el padding no afecte al ancho total */
 		}
-		
+
 		.recuadro {
 			/* font-style: italic; Texto en cursiva */
-			background-color: #f2f2f2; /* Fondo gris */
-			padding: 10px; /* Espaciado interno */
+			background-color: #f2f2f2;
+			/* Fondo gris */
+			padding: 10px;
+			/* Espaciado interno */
 			/*border: 2px solid #d3d3d3;  Borde gris */
 			/*border-radius: 5px;  Bordes redondeados */
 			margin-top: 15px;
 		}
-		
+
 		.myPanelGrid .ui-panelgrid-row:nth-child(even) {
-			background-color: #f0f0f0 !important; /* Color de fondo para filas pares */
+			background-color: #f0f0f0 !important;
+			/* Color de fondo para filas pares */
 		}
 
 		.myPanelGrid .ui-panelgrid-row:nth-child(odd) {
-			background-color: #ffffff !important; /* Color de fondo para filas impares */
+			background-color: #ffffff !important;
+			/* Color de fondo para filas impares */
 		}
-		
+
 		.azul {
 			color: #007ad9;
 		}
@@ -117,26 +130,27 @@
 		.rojo {
 			color: #d9534f;
 		}
-    </style>
+	</style>
 </h:head>
 <h:body>
-    <h:form id="updateForm">
-        <script>
-            function copyTxt(copyText) {
-                navigator.clipboard.writeText(copyText);
-            }
-        </script>
-        <p:messages id="messages" showDetail="true" closable="true">
-            <p:autoUpdate />
-        </p:messages>
-		<p:remoteCommand name="ldStrong" update="modalStrong" action="#{interlinealController.loadStrongParam}" oncomplete="PF('dlgStr').show()"/>
-        <div class="task-lists">
-            <h:panelGrid columns="7" style="padding-left: 30px; padding-right: 30px;">
-                <p:inputText id="inputTxt" value="#{interlinealController.input}" />
+	<h:form id="updateForm">
+		<script>
+			function copyTxt(copyText) {
+				navigator.clipboard.writeText(copyText);
+			}
+		</script>
+		<p:messages id="messages" showDetail="true" closable="true">
+			<p:autoUpdate />
+		</p:messages>
+		<p:remoteCommand name="ldStrong" update="modalStrong" action="#{interlinealController.loadStrongParam}"
+			oncomplete="PF('dlgStr').show()" />
+		<div class="task-lists">
+			<h:panelGrid columns="7" style="padding-left: 30px; padding-right: 30px;">
+				<p:inputText id="inputTxt" value="#{interlinealController.input}" />
 
-                <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" defaultCommand="true"
-                    action="#{interlinealController.evaluate}" update="updateForm:searchItems, updateForm:inputTxt" />
-				
+				<p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" defaultCommand="true" icon="pi pi-search"
+					action="#{interlinealController.evaluate}" update="updateForm:searchItems, updateForm:inputTxt" />
+
 				<p:divider layout="vertical" style="width: 100px;" />
 
 				<p:selectOneMenu id="option" value="#{interlinealController.base}">
@@ -145,105 +159,131 @@
 
 				<p:divider layout="vertical" style="width: 100px;" />
 
-				<p:commandLink value="Diccionario" onclick="PF('dlgDic').show()"/>
-            </h:panelGrid>
-            <h:panelGrid id="searchItems" columns="1" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 100%">
+				<p:commandLink value="Diccionario" onclick="PF('dlgDic').show()" />
+			</h:panelGrid>
+			<h:panelGrid id="searchItems" columns="1"
+				style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 100%">
 				<div class="recuadro">
-                    <b>#{interlinealController.cita.cita()}</b>
-                    <br/>
-                    <br/>
+					<b>#{interlinealController.cita.cita()}</b>
+					<br />
+					<br />
 					#{interlinealController.reference}
 				</div>
-                <br/>
+				<br />
 				<p:dataGrid id="data" var="o" value="#{interlinealController.words}" columns="5" layout="grid">
-                    <f:facet name="header">
+					<f:facet name="header">
 						<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <p:commandLink value="&lt;" action="#{interlinealController.navigate(0)}" update="updateForm:searchItems"/>
-						<h:outputText value="#{interlinealController.cita.cita()}" style="text-align: center; flex-grow: 1;"/>
-                        <p:commandLink value="&gt;" action="#{interlinealController.navigate(1)}" update="updateForm:searchItems"/>
+							<p:commandLink value="" action="#{interlinealController.navigate(0)}"
+								update="updateForm:searchItems">
+								<i class="pi pi-caret-left" />
+							</p:commandLink>
+							<h:outputText value="#{interlinealController.cita.cita()}"
+								style="text-align: center; flex-grow: 1;" />
+							<p:commandLink value="" action="#{interlinealController.navigate(1)}"
+								update="updateForm:searchItems">
+								<i class="pi pi-caret-right" />
+							</p:commandLink>
 						</div>
-                    </f:facet>
+					</f:facet>
 					<div class="product-grid-item">
 						<div class="item-id">
-							<p:commandLink value="#{o.strongId}" action="#{interlinealController.loadStrong(o.strongId)}" 
-                                update="updateForm:modalStrong" rendered="#{o.strongId > 0}"
-                                oncomplete="PF('dlgStr').show()"/>
+							<p:commandLink value="#{o.strongId}" action="#{interlinealController.loadStrong(o.wordId)}"
+								update="updateForm:modalStrong" rendered="#{o.wordId > 0}"
+								oncomplete="PF('dlgStr').show()" />
 
-                            <p:commandButton id="lnkRef" value="" icon="pi pi-bookmark" styleClass="rounded-button ui-button-secondary ui-button-outlined"
-								action="#{interlinealController.loadReferences(o.strongId)}" style="height:32px;width:32px;margin-left:10px;"
-                                update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()" rendered="#{o.strongId > 0}"/>
-                            <p:tooltip for="lnkRef" value="Ocurrencias en la Escritura" position="right"/>
+							<p:commandButton id="lnkRef" value="" icon="pi pi-bookmark"
+								styleClass="rounded-button ui-button-secondary ui-button-outlined"
+								action="#{interlinealController.loadReferences(o.wordId)}"
+								style="height:32px;width:32px;margin-left:10px;" update="updateForm:modalReferences"
+								oncomplete="PF('dlgRef').show()" rendered="#{o.wordId > 0}" />
+							<p:tooltip for="lnkRef" value="Ocurrencias en la Escritura" position="right" />
 
-							<p:commandButton id="lnkRefw" value="" icon="pi pi-bookmark" styleClass="rounded-button ui-button-secondary ui-button-outlined"
-								action="#{interlinealController.loadReferences(o.word)}" style="height:32px;width:32px;margin-left:10px;"
-                                update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()" rendered="#{o.strongId == 0}"/>
+							<p:commandButton id="lnkRefw" value="" icon="pi pi-bookmark"
+								styleClass="rounded-button ui-button-secondary ui-button-outlined"
+								action="#{interlinealController.loadReferencesForWord(o.word)}"
+								style="height:32px;width:32px;margin-left:10px;" update="updateForm:modalReferences"
+								oncomplete="PF('dlgRef').show()" rendered="#{o.wordId == 0}" />
 						</div>
 						<div class="product-name"><span class="product-category">#{o.word}</span></div>
 						<div class="item-type">
-                            <p:commandLink id="right" value="#{o.type}" action="#{interlinealController.loadNotationDetail(o.type)}" 
-                                update="updateForm:modalNot"
-                                oncomplete="PF('dlgNot').show()"/>
-                            <p:tooltip for="right" value="#{o.morfologic}" position="right"/>
-                        </div>
+							<p:commandLink id="right" value="#{o.type}"
+								action="#{interlinealController.loadNotationDetail(o.type)}"
+								update="updateForm:modalNot" oncomplete="PF('dlgNot').show()" />
+							<p:tooltip for="right" value="#{o.morfologic}" position="right" />
+						</div>
 						<div class="item-meanign">#{o.meaning}</div>
 					</div>
 				</p:dataGrid>
-            </h:panelGrid>
-        </div>
-		<p:dialog id="modalReferences" header="Usos en la Escritura" widgetVar="dlgRef" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
-            <p:dataTable id="issues" var="o" value="#{interlinealController.references}" scrollable="true" scrollHeight="350" showGridlines="true"
-                rowIndexVar="rowIndex" rowStyleClass="#{(rowIndex % 2) eq 0 ? 'even' : 'odd'}">
-                <f:facet name="header">
-                    #{interlinealController.references.size()} usos
-                </f:facet>
-                <p:column headerText="Verso" style="width: 68%;">
-                    <h:outputText value="#{o.reference}" escape="false" style="white-space:pre-line;" />
-                </p:column>
-                <p:column headerText="Palabra" style="width: 32%;">
+			</h:panelGrid>
+		</div>
+		<p:dialog id="modalReferences" header="Usos en la Escritura" widgetVar="dlgRef" minHeight="400" width="700"
+			showEffect="fade" closeOnEscape="true">
+			<p:dataTable id="issues" var="o" value="#{interlinealController.references}" scrollable="true"
+				scrollHeight="350" showGridlines="true" rowIndexVar="rowIndex"
+				rowStyleClass="#{(rowIndex % 2) eq 0 ? 'even' : 'odd'}">
+				<f:facet name="header">
+					#{interlinealController.references.size()} usos
+				</f:facet>
+				<p:column headerText="Verso" style="width: 68%;">
+					<h:outputText value="#{o.reference}" escape="false" style="white-space:pre-line;" />
+				</p:column>
+				<p:column headerText="Palabra" style="width: 32%;">
 					<h:outputText value="#{o.strongId}" styleClass="azul" />
-					<p:commandButton id="lnkSimpleItl" value="" icon="pi pi-tag" styleClass="rounded-button ui-button-secondary ui-button-outlined"
-						action="#{interlinealController.loadSimpleInterlineal(o.verseId)}" style="height:32px;width:32px;margin-left:10px;"
-						update="updateForm:modalSimpleItl" oncomplete="PF('dlgSimpItl').show()"/>
-					<br/>
+					<p:commandLink id="lnkSimpleItl" value="" action="#{interlinealController.loadSimpleInterlineal(o.verseId)}"
+						update="updateForm:modalSimpleItl"
+						oncomplete="PF('dlgSimpItl').show()" >
+						<i class="pi pi-info-circle"/>
+					</p:commandLink>
+					<p:tooltip for="lnkSimpleItl" value="Lenguaje original" position="right" />
+					<br />
 					<h:outputText value="#{o.word}" />
-					<br/>
+					<br />
 					<h:outputText value="#{o.type}" styleClass="azulBold" />
-					<br/>
+					<br />
 					<h:outputText value="#{o.meaning}" styleClass="rojo" />
-                </p:column>
-            </p:dataTable>
-        </p:dialog>
-		<p:dialog id="modalSimpleItl" header="Texto en el lenguaje original" widgetVar="dlgSimpItl" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
-            <h:outputText value="#{interlinealController.simpleInterlineal}" escape="false" style="white-space:pre-line;" />
-        </p:dialog>
-        <p:dialog id="modalNot" header="Notacion gramatical" widgetVar="dlgNot" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
-            <p:dataTable id="nots" var="o" value="#{interlinealController.notationDetail.detail}" scrollable="true" scrollHeight="350" showGridlines="true"
-                rowIndexVar="rowIndex" rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}" >
-                <f:facet name="header">
-                    Morfologia. #{interlinealController.notationDetail.notation}
-                </f:facet>
-                <p:column headerText="Tipo" style="width: 20%;">
-                    <h:outputText value="#{o.descripcion}" />
-                </p:column>
-                <p:column headerText="Código" style="width: 20%;">
-                    <h:outputText value="#{o.codigo}" style="color: green;" />
-                </p:column>
-                <p:column headerText="Descripción" style="width: 60%;">
-                    <h:outputText value="#{o.valor}" />
-                </p:column>
-            </p:dataTable>
-        </p:dialog>
-        <p:dialog id="modalStrong" header="Diccionario Strong" widgetVar="dlgStr" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
-			<p:dataTable id="sdets" var="o" value="#{interlinealController.strong.details}" scrollable="true" scrollHeight="350" showGridlines="true"
-				rowIndexVar="rowIndex" rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}" >
+				</p:column>
+			</p:dataTable>
+		</p:dialog>
+		<p:dialog id="modalSimpleItl" header="Texto en el lenguaje original" widgetVar="dlgSimpItl" minHeight="400"
+			width="700" showEffect="fade" closeOnEscape="true">
+			<h:outputText value="#{interlinealController.simpleInterlineal}" escape="false"
+				style="white-space:pre-line;" />
+		</p:dialog>
+		<p:dialog id="modalNot" header="Notacion gramatical" widgetVar="dlgNot" minHeight="400" width="700"
+			showEffect="fade" closeOnEscape="true">
+			<p:dataTable id="nots" var="o" value="#{interlinealController.notationDetail.detail}" scrollable="true"
+				scrollHeight="350" showGridlines="true" rowIndexVar="rowIndex"
+				rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}">
+				<f:facet name="header">
+					Morfologia. #{interlinealController.notationDetail.notation}
+				</f:facet>
+				<p:column headerText="Tipo" style="width: 20%;">
+					<h:outputText value="#{o.descripcion}" />
+				</p:column>
+				<p:column headerText="Código" style="width: 20%;">
+					<h:outputText value="#{o.codigo}" style="color: green;" />
+				</p:column>
+				<p:column headerText="Descripción" style="width: 60%;">
+					<h:outputText value="#{o.valor}" />
+				</p:column>
+			</p:dataTable>
+		</p:dialog>
+		<p:dialog id="modalStrong" header="Diccionario Strong" widgetVar="dlgStr" minHeight="400" width="700"
+			showEffect="fade" closeOnEscape="true">
+			<p:dataTable id="sdets" var="o" value="#{interlinealController.strong.details}" scrollable="true"
+				scrollHeight="350" showGridlines="true" rowIndexVar="rowIndex"
+				rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}">
 				<f:facet name="header">
 					<div class="encabezado">
-						<h:outputText value="#{interlinealController.strong.language} ##{interlinealController.strong.strongId} - #{interlinealController.strong.defGlobal}" 
+						<h:outputText
+							value="#{interlinealController.strong.language} ##{interlinealController.strong.strongId} - #{interlinealController.strong.defGlobal}"
 							escape="false" />
-						<p:commandButton id="lnkRefPp" value="" icon="pi pi-bookmark" styleClass="rounded-button ui-button-secondary ui-button-outlined"			
-							action="#{interlinealController.loadReferences(interlinealController.strong.strongId)}" style="height:32px;width:32px;margin-left:10px;"
-							update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()"/>
-						<p:tooltip for="lnkRefPp" value="Ocurrencias en la Escritura" position="right"/>
+						<p:commandButton id="lnkRefPp" value="" icon="pi pi-bookmark"
+							styleClass="rounded-button ui-button-secondary ui-button-outlined"
+							action="#{interlinealController.loadReferences(interlinealController.strong.wordId)}"
+							style="height:32px;width:32px;margin-left:10px;" update="updateForm:modalReferences"
+							oncomplete="PF('dlgRef').show()" />
+						<p:tooltip for="lnkRefPp" value="Ocurrencias en la Escritura" position="right" />
 					</div>
 				</f:facet>
 				<p:column style="width: 35%;">
@@ -253,29 +293,31 @@
 					<h:outputText value="#{o[1]}" escape="false" />
 				</p:column>
 			</p:dataTable>
-        </p:dialog>
-		<p:dialog id="modalDicc" header="Diccionario" widgetVar="dlgDic" minHeight="400" width="700" showEffect="fade" closeOnEscape="true">
-            <p:inputText id="inputStr" value="#{interlinealController.strongInput}" />
+		</p:dialog>
+		<p:dialog id="modalDicc" header="Diccionario" widgetVar="dlgDic" minHeight="400" width="700" showEffect="fade"
+			closeOnEscape="true">
+			<p:inputText id="inputStr" value="#{interlinealController.strongInput}" />
 
-			<p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" defaultCommand="true"
+			<p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
 				action="#{interlinealController.findStrong}" update="updateForm:diccs" />
-			<br/>
-			<br/>
-			<p:dataTable id="diccs" var="o" value="#{interlinealController.strongs}" scrollable="true" scrollHeight="350" showGridlines="true"
-                rowIndexVar="rowIndex" rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}" >
-                <p:column headerText="Código" style="width: 20%;">
-                    <p:commandLink value="#{o.codigo}" action="#{interlinealController.loadReferences(o.codigo, o.testamentId)}"
-						update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()"/>
-                </p:column>
+			<br />
+			<br />
+			<p:dataTable id="diccs" var="o" value="#{interlinealController.strongs}" scrollable="true"
+				scrollHeight="350" showGridlines="true" rowIndexVar="rowIndex"
+				rowStyleClass="#{rowIndex % 2 == 0 ? 'even' : 'odd'}">
+				<p:column headerText="Código" style="width: 20%;">
+					<p:commandLink value="#{o.codigo}" action="#{interlinealController.loadReferences(o.wordId)}"
+						update="updateForm:modalReferences" oncomplete="PF('dlgRef').show()" />
+				</p:column>
 				<p:column headerText="Palabra" style="width: 20%;">
-                    <h:outputText value="#{o.word}" />
-                </p:column>
-                <p:column headerText="Descripción" style="width: 60%;">
-                    <h:outputText value="#{o.meaning}" />
-                </p:column>
-            </p:dataTable>
-        </p:dialog>
-    </h:form>
+					<h:outputText value="#{o.word}" />
+				</p:column>
+				<p:column headerText="Descripción" style="width: 60%;">
+					<h:outputText value="#{o.meaning}" />
+				</p:column>
+			</p:dataTable>
+		</p:dialog>
+	</h:form>
 </h:body>
 
 </html>

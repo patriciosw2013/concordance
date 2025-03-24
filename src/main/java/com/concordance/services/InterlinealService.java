@@ -11,12 +11,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,7 +30,6 @@ import com.concordance.services.vo.ItemStringVo;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.bible.CitaVo;
-import com.concordance.services.vo.bible.NoteBibleVo;
 import com.concordance.services.vo.interlineal.InterlinealVo;
 import com.concordance.services.vo.interlineal.NotationDetailVo;
 import com.concordance.services.vo.interlineal.NotationVo;
@@ -50,8 +47,8 @@ public class InterlinealService {
         List<InterlinealVo> res = new ArrayList<>();
         ResultSet result = null;
         try (Connection conn = db.connection("Interlineal")) {
-            String sql = "select i.chapter, i.verse, i.strong_id, i.word, i.type, i.meaning, i.book_id, v.testament_id " +
-                "from interlineal i inner join version vr on (vr.id = i.version) inner join book v on (i.book_id = case when i.version = 3 then v.id_ct else v.id end) " + 
+            String sql = "select i.chapter, i.verse, st.strong_id, i.word, i.type, i.meaning, i.book_id, coalesce(st.id, 0), coalesce(st.language, '') " +
+                "from interlineal i left join strong st on (st.id = i.word_id) inner join version vr on (vr.id = i.version) " + 
                 "where i.book_id = ? and i.chapter = ? and i.verse = ? and vr.name = ?";
             try (PreparedStatement st = conn.prepareStatement(sql)) {
                 st.setInt(1, book);
@@ -68,7 +65,9 @@ public class InterlinealService {
                     b.setType(result.getString(5));
                     b.setMeaning(result.getString(6));
                     b.setBookId(result.getInt(7));
-                    b.setMorfologic(notation(b.getType(), result.getInt(8), version).summary());
+                    b.setWordId(result.getInt(8));
+                    b.setLanguage(result.getString(9));
+                    b.setMorfologic(notation(b.getType(), b.getLanguage()).summary());
 
                     res.add(b);
                 }
@@ -179,8 +178,8 @@ public class InterlinealService {
         return refs;
     }
 
-    public static List<StrongReferenceVo> strongReference(int strongId, int testamentId, String baseVerse, String version) throws SQLException {
-        if(strongId == 0)
+    public static List<StrongReferenceVo> strongReference(int wordId, String baseVerse, String version) throws SQLException {
+        if(wordId == 0)
             return new ArrayList<>();
 
         List<StrongReferenceVo> res = new ArrayList<>();
@@ -191,16 +190,16 @@ public class InterlinealService {
                 st.executeUpdate();
             }
 
-            sql = "select i.chapter, i.verse, i.strong_id, i.word, i.type, i.meaning, i.book_id, " +
+            sql = "select i.chapter, i.verse, st.strong_id, i.word, i.type, i.meaning, i.book_id, " +
                 "trim(v.text) || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' ' || ? || ')', v.id " +
-                "from interlineal i inner join version vr on (vr.id = i.version) inner join book a on (i.book_id = a.id) " +
+                "from interlineal i inner join strong st on (st.id = i.word_id) inner join version vr on (vr.id = i.version) "+
+                "inner join db2.book a on (i.book_id = a.id) " +
                 "inner join db2.verse v on (v.book_id = a.id and v.chapter = i.chapter and v.verse = i.verse) " +
-                "where i.strong_Id = ? and a.testament_id = ? and vr.name = ?";
+                "where i.word_Id = ? and vr.name = ?";
             try (PreparedStatement st = conn.prepareStatement(sql)) {
                 st.setString(1, baseVerse);
-                st.setInt(2, strongId);
-                st.setInt(3, testamentId);
-                st.setString(4, version);
+                st.setInt(2, wordId);
+                st.setString(3, version);
                 result = st.executeQuery();
                 while (result.next()) {
                     StrongReferenceVo b = new StrongReferenceVo();
@@ -245,27 +244,25 @@ public class InterlinealService {
         return res;
     }
 
-    public static StrongDetailVo strongDetail(int strongId, int testamentId, String version) throws SQLException {
+    public static StrongDetailVo strongDetail(int wordId) throws SQLException {
         ResultSet result = null;
         try (Connection conn = db.connection(base)) {
-            String sql = "select i.language, i.def, i.def_alterna, i.type, i.deriva, i.def_rv, i.word, i.def_global " +
-                "from strong i inner join version_lg vl on (vl.language = i.language) inner join version v on (v.id = vl.version) " + 
-                "where i.strong_Id = ? and vl.testament_id = ? and v.name = ?";
+            String sql = "select i.language, i.def, i.def_alterna, i.type, i.deriva, i.def_rv, i.word, i.def_global, i.strong_id, i.id " +
+                "from strong i where i.id = ?";
             try (PreparedStatement st = conn.prepareStatement(sql)) {
-                st.setInt(1, strongId);
-                st.setInt(2, testamentId);
-                st.setString(3, version);
+                st.setInt(1, wordId);
                 result = st.executeQuery();
                 if(result.next()) {
                     StrongDetailVo o = new StrongDetailVo();
-                    o.setStrongId(strongId);
+                    o.setWordId(result.getInt(10));
+                    o.setStrongId(result.getInt(9));
                     o.setLanguage(result.getString(1));
                     o.setDefGlobal(result.getString(8));
                     o.setDetails(Arrays.asList(new String[]{"Palabra original:", result.getString(7)},
                         new String[]{"Definición:", result.getString(2)},
                         new String[]{"Definición2:", result.getString(3)},
                         new String[]{"Tipo:", result.getString(4)},
-                        new String[]{"Derivacion:", formatDeriva(result.getString(5))},
+                        new String[]{"Derivacion:", formatDeriva(result.getString(5), o.getLanguage())},
                         new String[]{"Def. en RV1909", result.getString(6)}));
 
                     return o;
@@ -274,17 +271,36 @@ public class InterlinealService {
         }
     }
 
-    public static List<StrongFindVo> findStrong(String in, String version) throws SQLException {
+    public static StrongDetailVo strongDetail(int strongId, String language) throws SQLException {
+        int wordId = wordId(strongId, language);
+        return strongDetail(wordId);
+    }
+
+    public static int wordId(int strongId, String language) throws SQLException {
+        ResultSet result = null;
+        try (Connection conn = db.connection(base)) {
+            String sql = "select o.id from strong o where o.strong_id = ? and o.language = ?";
+            try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setInt(1, strongId);
+                st.setString(2, language);
+                result = st.executeQuery();
+                if(result.next()) {
+                    return result.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public static List<StrongFindVo> findStrong(String in) throws SQLException {
         ResultSet result = null;
         List<StrongFindVo> res = new ArrayList<>();
         try (Connection conn = db.connection(base)) {
-            String sql = "select o.strong_id, o.word || ' (' || o.language || ')', o.def_global, vl.testament_id from strong o " +
-            "inner join version_lg vl on (vl.language = o.language) inner join version v on (v.id = vl.version) " +
-            "where (o.word like ? || '%' or o.definition like ? || '%') and v.name = ?";
+            String sql = "select o.strong_id, o.word || ' (' || o.language || ')', o.def_global, o.id from strong o " +
+                "where (o.word like ? || '%' or o.definition like ? || '%')";
             try (PreparedStatement st = conn.prepareStatement(sql)) {
                 st.setString(1, in);
                 st.setString(2, in);
-                st.setString(3, version);
                 result = st.executeQuery();
                 while(result.next()) {
                     res.add(new StrongFindVo(result.getInt(1), result.getString(2), 
@@ -295,11 +311,13 @@ public class InterlinealService {
         return res;
     }
 
-    private static String formatDeriva(String in) {
+    private static String formatDeriva(String in, String language) {
         if(in == null) return null;
 
+        if(in.contains("hebreo")) language = "hebreo";
+
         return in.replaceAll("(\\d+)", 
-        "<a href=\"#\" onclick=\"ldStrong([{name: 'param1', value: this.textContent}]);\">$1</a>");
+            "<a href=\"#\" onclick=\"ldStrong([{name: 'num', value: this.textContent}, {name: 'lg', value: '" + language + "'}]);\">$1</a>");
     }
 
     public static void loadInterlinealKL() throws SQLException, IOException {
@@ -572,8 +590,8 @@ public class InterlinealService {
         createStrong(sts);
     }
 
-    public static NotationVo notation(String in, int testamentId, String version) throws SQLException {
-        NotationVo ext = extractNotacion(in, language(testamentId, version));
+    public static NotationVo notation(String in, String language) throws SQLException {
+        NotationVo ext = extractNotacion(in, language);
         if(ext == null)
             return new NotationVo();
 
@@ -592,8 +610,8 @@ public class InterlinealService {
         return nt;
 	}
 
-    public static NotationDetailVo notationDetail(String in, int testamentId, String version) throws SQLException {
-        NotationVo ext = extractNotacion(in, language(testamentId, version));
+    public static NotationDetailVo notationDetail(String in, String language) throws SQLException {
+        NotationVo ext = extractNotacion(in, language);
         if(ext == null)
             return null;
 
@@ -865,7 +883,7 @@ public class InterlinealService {
             //loadInterlineal();
 
             /*String[] patrones = {"V-ADP-APM", "V-2RPP-ASM", "V-AAM-3S", "V-AAN", "V-AOI-1P-ATT", "A-APF-C", "N-VPF", "A-NUI-ABB", 
-                "V-PPA-NMP", "CONJ", "N-LI", "N-NSM"};*/
+                "V-PPA-NMP", "CONJ", "N-LI", "N-NSM"};
             String[] patrones = {"adjv.pual.ptcp.u.f.sg.c", "verbo.tif.perf.p1.u.sg.prs.p2.m.pl", "advb"};
             for (String o : patrones) { //notations()) {
                 System.out.println(o);
@@ -875,7 +893,7 @@ public class InterlinealService {
                 
                 NotationDetailVo dt = notationDetail(o, 1, "RVR1960");
                 System.out.println("   " + dt);
-            }
+            }*/
 
             //strongReference(1, 1, "RVR1960");
 
@@ -904,9 +922,13 @@ public class InterlinealService {
                 writer.println(it);
             }*/
 
-            System.out.println(findStrong("eujaristía", "RVR1960"));
-
-            System.out.println(interlineal(40, 1, 1, "Vulgata"));
+            System.out.println(findStrong("eujaristía"));
+            List<InterlinealVo> res = interlineal(40, 1, 1, "RVR1960");
+            System.out.println(res.get(0));
+            System.out.println(strongReference(res.get(0).getWordId(), "RVR1960", "RVR1960").get(0));
+            System.out.println(strongDetail(res.get(0).getWordId(), "RVR1960"));
+            System.out.println(interlineal(1, 1, 1, "LXX").get(0));
+            System.out.println(interlineal(40, 1, 1, "Vulgata").get(0));
 
             //loadStrongKlogos(true);
 

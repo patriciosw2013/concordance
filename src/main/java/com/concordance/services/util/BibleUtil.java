@@ -24,7 +24,6 @@ import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.TextExtractedVo;
 import com.concordance.services.vo.Verse;
 import com.concordance.services.vo.bible.CitaVo;
-import com.concordance.services.vo.bible.NoteBibleVo;
 
 public class BibleUtil implements Serializable {
 
@@ -106,7 +105,7 @@ public class BibleUtil implements Serializable {
 				List<Verse> res = new ArrayList<>();
 				while (result.next()) {
 					res.add(new Verse(result.getInt(2), result.getInt(3), 
-						result.getString(4).trim())); //.replaceAll("\s?[\[\(].*?[\]\)]", "").trim()));
+						result.getString(4).trim().replaceAll("\\[\\d+\\]", "")));
 				}
 				return res;
 			}
@@ -208,19 +207,21 @@ public class BibleUtil implements Serializable {
 		List<RecordVo> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select v.book_id, v.id, trim(v.text) || ' ' || '(' || b.name || ' ' || v.chapter || ':' || v.verse || ' %s)' "
-					+ "from verse v inner join book b on (b.id = v.book_id) ", base)
-					+ "where v.text like '% " + in + "%'";
+			String sql = "select v.book_id, v.id, trim(v.text) || ' ' || '(' || b.name || ' ' || v.chapter || ':' || v.verse || ' ' || ? || ')' "
+					+ "from verse v inner join book b on (b.id = v.book_id) "
+					+ "where v.text like '%' || ? || '%' order by v.id";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.setString(1, base);
+				st.setString(2, in);
 				result = st.executeQuery();
 				while(result.next()) {
 					RecordVo b = new RecordVo();
 					b.setBookId(result.getInt(1));
 					b.setRecordId(result.getInt(2));
-					b.setText(result.getString(3)); //.replaceAll("\s?[\[\(].*?[\]\)]", ""));
+					b.setText(result.getString(3));
 
 					if(highlight)
-						b.setText(b.getText().replaceAll(in, "<b style=\"color:red;\">" + in + "</b>"));
+						b.setText(b.getText().replaceAll(in, "<b style=\"color:red;\">" + in + "</b>").replaceAll("\\[\\d+\\]", ""));
 
 					res.add(b);
 				}
@@ -516,44 +517,24 @@ public class BibleUtil implements Serializable {
 	}
 
 	public static String readNotes(int bookId, int chapter, String base) throws SQLException {
-		List<NoteBibleVo> foot = readNotes(bookId, chapter, 1, base);
-		List<NoteBibleVo> cross = readNotes(bookId, chapter, 2, base);
-		List<String> res = new ArrayList<>();
-		if(foot != null && !foot.isEmpty()) {
-			res.add("* Notas al pie:");
-			res.addAll(foot.stream().map(NoteBibleVo::getText).collect(Collectors.toList()));
-		}
-
-		if(cross != null && !cross.isEmpty()) {
-			res.add("* Referencias cruzadas:");
-			res.addAll(cross.stream().map(i -> String.format("v.%s:%s: %s", i.getChapterId(), i.getVerse(), i.getText()))
-				.collect(Collectors.toList()));
-		}
-
-		return res.stream().collect(Collectors.joining("\n"));
-	}
-
-	public static List<NoteBibleVo> readNotes(int bookId, int chapter, int type, String base) throws SQLException {
 		if(bookId == 0)
 			return null;
 		
-		List<NoteBibleVo> res = new ArrayList<>();
+		List<String> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.book_id, v.chapter, v.verse, v.type, v.text from notes v where v.book_id = ? and v.chapter = ? and v.type = ?";
+			String sql = "select v.book_id, v.chapter, v.text from notes v where v.book_id = ? and v.chapter = ?";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				st.setInt(1, bookId);
 				st.setInt(2, chapter);
-				st.setInt(3, type);
 				result = st.executeQuery();
 				while(result.next()) {
-					res.add(new NoteBibleVo(result.getInt(1), result.getInt(2), result.getInt(3), 
-						result.getInt(4), result.getString(5)));
+					res.add(result.getString(3));
 				}
 			}
 		}
 		
-		return res;
+		return res.stream().collect(Collectors.joining("\n"));
 	}
 
 	public static void main(String[] args) {
