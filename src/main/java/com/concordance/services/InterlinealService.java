@@ -19,6 +19,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import com.concordance.services.util.BibleUtil;
 import com.concordance.services.util.FileUtils;
 import com.concordance.services.util.ListUtils;
@@ -67,7 +70,8 @@ public class InterlinealService {
                     b.setBookId(result.getInt(7));
                     b.setWordId(result.getInt(8));
                     b.setLanguage(result.getString(9));
-                    b.setMorfologic(notation(b.getType(), b.getLanguage()).summary());
+                    b.setMorfologic("hebreo".equals(b.getLanguage()) ? simpleDetailNot(b.getType()) : 
+                        notation(b.getType(), b.getLanguage()).summary());
 
                     res.add(b);
                 }
@@ -293,6 +297,9 @@ public class InterlinealService {
     }
 
     public static List<StrongFindVo> findStrong(String in) throws SQLException {
+        if(TextUtils.isEmpty(in))
+            return new ArrayList<>();
+
         ResultSet result = null;
         List<StrongFindVo> res = new ArrayList<>();
         try (Connection conn = db.connection(base)) {
@@ -320,6 +327,7 @@ public class InterlinealService {
             "<a href=\"#\" onclick=\"ldStrong([{name: 'num', value: this.textContent}, {name: 'lg', value: '" + language + "'}]);\">$1</a>");
     }
 
+    @Deprecated
     public static void loadInterlinealKL() throws SQLException, IOException {
         String urlgl = "https://www.logosklogos.com/interlinear/%s/%s/%s/%s";
         try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", StandardCharsets.UTF_8.name())) {
@@ -362,6 +370,78 @@ public class InterlinealService {
             }
 
             System.out.println("Interlineal creado con exito");
+        }
+    }
+
+    public static void interlinealKL(boolean existHTML) throws SQLException, IOException {
+        String fileHTML = "D:\\Desarrollo\\interlinealKL.txt";
+        if (!existHTML) {
+            String urlgl = "https://www.logosklogos.com/interlinear/%s/%s/%s/%s";
+            try (PrintWriter writer = new PrintWriter(fileHTML, StandardCharsets.UTF_8.name())) {
+                System.out.println("Cargando desde web...");
+                for (int testamentId : new int[] { 1, 2 }) {
+                    String prefix = testamentId == 1 ? "AT" : "NT";
+                    for (ItemVo b : BibleUtil.booksList(testamentId, base)) {
+                        System.out.println("Leyendo libro: " + b.getValor() + " id: " + b.getCodigo());
+                        for (ChapterVo o : BibleUtil.chaptersDetail(b.getCodigo(), base)) {
+                            System.out.println("Leyendo capitulo: " + o.getChapterId());
+                            for (Integer v : o.getVerses()) {
+                                String url = String.format(urlgl, prefix, b.getDescripcion(), o.getChapterId(), v);
+                                String txt = WebUtil.readWeb(url, "table.table-condensed", false);
+                                writer.println(">>>>>>");
+                                writer.println(b.getCodigo() + " " + o.getChapterId() + " " + v);
+                                writer.println(txt);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        try (PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
+            List<InterlinealVo> rds = new ArrayList<>();
+            for (List<String> res : ListUtils
+                    .split(Files.readAllLines(new File(fileHTML).toPath(), StandardCharsets.UTF_8), ">>>>>>")) {
+                String[] codes = res.get(0).split(" ");
+                int bookId = Integer.parseInt(codes[0]);
+                int chp = Integer.parseInt(codes[1]);
+                int vr = Integer.parseInt(codes[2]);
+                String classWord = bookId < 40 ? "span.gw.cursor-pointer.hebrew-ezra-bold.interl.text-success"
+                        : "span.gw.cursor-pointer.greek-bold.interl.text-success";
+                String classMean = bookId < 40 ? "span.text-danger.translation-hebrew" : "span.text-danger";
+                String classMorfo = bookId < 40 ? "span.gw.parsing.cursor-pointer.text-warning"
+                        : "span.parsing.cursor-pointer.text-warning";
+
+                String txt = res.subList(1, res.size()).stream().collect(Collectors.joining(" "));
+                Elements els = WebUtil.readNodeTags(txt, "td");
+                for (Element el : els) {
+                    String morfo = null, word = null, meaning = null, morfoDet = null;
+                    int strong = 0;
+                    Elements ins = WebUtil.readNodeTags(el.html(), classWord);
+                    if (!ins.isEmpty())
+                        word = ins.text();
+
+                    ins = WebUtil.readNodeTags(el.html(), classMorfo);
+                    if (!ins.isEmpty()) {
+                        morfo = ins.text();
+                        morfoDet = ins.attr("title");
+                    }
+
+                    ins = WebUtil.readNodeTags(el.html(), classMean);
+                    if (!ins.isEmpty())
+                        meaning = ins.text();
+
+                    ins = WebUtil.readNodeTags(el.html(), "a");
+                    if (!ins.isEmpty())
+                        strong = Integer.parseInt(ins.text());
+                    InterlinealVo it = new InterlinealVo(bookId, chp, vr, strong, word, morfo, meaning);
+                    it.setMorfologic(morfoDet);
+                    rds.add(it);
+                }
+            }
+
+            for (InterlinealVo it : rds)
+                writer.println(it);
         }
     }
 
@@ -610,13 +690,36 @@ public class InterlinealService {
         return nt;
 	}
 
+    private static String simpleDetailNot(String in) {
+        return Arrays.asList(in.split("\\.")).stream().map(i -> {
+                try {
+                    return descNotation(i);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).collect(Collectors.joining("."));
+    }
+
     public static NotationDetailVo notationDetail(String in, String language) throws SQLException {
+        String notation = "Notacion: " + in;
         NotationVo ext = extractNotacion(in, language);
         if(ext == null)
             return null;
-
+        
         List<ItemStringVo> res = new ArrayList<>();
-        String notation = "Notacion: " + in;
+        if("hebreo".equals(language)) {
+            res = Arrays.asList(in.split("\\.")).stream().map(i -> {
+                try {
+                    return detailNotation(i);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).collect(Collectors.toList());
+            return new NotationDetailVo(notation, res);
+        }
+
         for(ItemStringVo o : Arrays.asList(detailNotation(ext.getTipo(), "tipo"),
             detailNotation(ext.getTiempo(), "tiempo"),
             detailNotation(ext.getVoz(), "voz"),
@@ -643,8 +746,27 @@ public class InterlinealService {
 
         ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select name from notation where code = '%s' and type = '%s'", code, tipo);
+			String sql = "select name from notation where code = ? and type = ?";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setString(1, code);
+                st.setString(2, tipo);
+				result = st.executeQuery();
+				if(result.next()) {
+					return result.getString(1);
+				} else return null;
+			}
+		}
+	}
+
+    public static String descNotation(String code) throws SQLException {
+        if(code == null)
+            return null;
+
+        ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select name from notation where code = ?";
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setString(1, code);
 				result = st.executeQuery();
 				if(result.next()) {
 					return result.getString(1);
@@ -659,8 +781,27 @@ public class InterlinealService {
 
         ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = String.format("select code, description, upper(type) from notation where code = '%s' and type = '%s'", code, tipo);
+			String sql = "select code, description, upper(type) from notation where code = ? and type = ?";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setString(1, code);
+                st.setString(2, tipo);
+				result = st.executeQuery();
+				if(result.next()) {
+					return new ItemStringVo(result.getString(1), result.getString(2), result.getString(3));
+				} else return null;
+			}
+		}
+	}
+
+    public static ItemStringVo detailNotation(String code) throws SQLException {
+        if(code == null)
+            return null;
+
+        ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = "select code, description, name from notation where code = ?";
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+                st.setString(1, code);
 				result = st.executeQuery();
 				if(result.next()) {
 					return new ItemStringVo(result.getString(1), result.getString(2), result.getString(3));
@@ -694,7 +835,7 @@ public class InterlinealService {
             return nt;
         }
 
-        regex = "([VNARCDTKIXQFSP])-([A-Za-z0-9]+)(?:-([A-Za-z0-9]+))?(?:-([A-Za-z0-9]+))?"; //"V-([A-Za-z0-9]+)(-[A-Za-z0-9]+)*";
+        regex = "([VNARCDTKIXQFSP])-([A-Za-z0-9]+)(?:-([A-Za-z0-9]+))?(?:-([A-Za-z0-9]+))?";
         pattern = Pattern.compile(regex);
         matcher = pattern.matcher(in);
         s0 = null;
@@ -779,7 +920,7 @@ public class InterlinealService {
         return nt;
     }
 
-    public static List<InterlinealVo> dividirTexto(int bookId, int chapter, int verse, String texto) {
+    private static List<InterlinealVo> dividirTexto(int bookId, int chapter, int verse, String texto) {
         String[] lineas = texto.split("\n");
         List<InterlinealVo> elementos = new ArrayList<>();
         int codigo = Integer.parseInt(lineas[0].trim());
@@ -877,65 +1018,7 @@ public class InterlinealService {
 
     public static void main(String[] args) {
         try {
-            //strong();
-            //loadStrong();
-            //interlineal();
-            //loadInterlineal();
-
-            /*String[] patrones = {"V-ADP-APM", "V-2RPP-ASM", "V-AAM-3S", "V-AAN", "V-AOI-1P-ATT", "A-APF-C", "N-VPF", "A-NUI-ABB", 
-                "V-PPA-NMP", "CONJ", "N-LI", "N-NSM"};
-            String[] patrones = {"adjv.pual.ptcp.u.f.sg.c", "verbo.tif.perf.p1.u.sg.prs.p2.m.pl", "advb"};
-            for (String o : patrones) { //notations()) {
-                System.out.println(o);
-                NotationVo nt = extractNotacion(o,"hebreo");
-                if(nt != null)
-                    System.out.println("   " + nt.summary());
-                
-                NotationDetailVo dt = notationDetail(o, 1, "RVR1960");
-                System.out.println("   " + dt);
-            }*/
-
-            //strongReference(1, 1, "RVR1960");
-
-            //loadInterlinealKL();
-
-            /*try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", StandardCharsets.UTF_8.name())) {
-                List<String> words = words("LXX");
-                Set<String> ws = new HashSet<>();
-                for(String x:words) {
-                    ws.addAll(Arrays.asList(x.split(" ")));
-                }
-                writer.println(ws.stream().collect(Collectors.joining("\n")));
-            }*/
-            /*try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", StandardCharsets.UTF_8.name())) {
-                List<RecordVo> words = wordsDetail("Vulgata");
-                List<InterlinealVo> ws = new ArrayList<>();
-                for(RecordVo x:words) {
-                    for(String z :Arrays.asList(x.getText().split(" "))) {
-                        if(z.trim().isEmpty()) continue;
-                        ws.add(new InterlinealVo(x.getBookId(), x.getChapterId(), x.getVerse(), 0, z, null, null));
-                    }
-                }
-
-                createInterlineal(ws, 3);
-                for(InterlinealVo it: ws)
-                writer.println(it);
-            }*/
-
-            System.out.println(findStrong("eujaristía"));
-            List<InterlinealVo> res = interlineal(40, 1, 1, "RVR1960");
-            System.out.println(res.get(0));
-            System.out.println(strongReference(res.get(0).getWordId(), "RVR1960", "RVR1960").get(0));
-            System.out.println(strongDetail(res.get(0).getWordId(), "RVR1960"));
-            System.out.println(interlineal(1, 1, 1, "LXX").get(0));
-            System.out.println(interlineal(40, 1, 1, "Vulgata").get(0));
-
-            //loadStrongKlogos(true);
-
-            //strongReference(1732, 1, "RVR1960");
-            //System.out.println("fin consulta");
-
-            //System.out.println("Creacion de interlineal exitosa");
+            interlinealKL(true);
         } catch (Exception e) {
             e.printStackTrace();
         }

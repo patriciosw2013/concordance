@@ -2,6 +2,7 @@ package com.concordance.services.vo.interlineal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.Data;
 
@@ -50,19 +51,6 @@ public class NotationVo {
             campos.add(numeroConj);
         }
 
-        StringBuilder sb = new StringBuilder();
-        boolean first = true; 
-        String delimiter = "griego".equals(language) ? "-" : ".";
-        for (String campo : campos) {
-            if (campo != null) { 
-                if (!first) {
-                    sb.append(delimiter);
-                }
-                sb.append(campo);
-                first = false;
-            }
-        }
-
-        return sb.toString();
+        return campos.stream().filter(i -> i != null).collect(Collectors.joining("griego".equals(language) ? "-" : "."));
     }
 }

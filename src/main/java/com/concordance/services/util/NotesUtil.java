@@ -225,8 +225,8 @@ public class NotesUtil extends AutoresService {
 
 	public static void main(String[] args) {
 		try {
-			readNotesFromURL();
-			//loadNotesFile("Patristica", false);
+			//readNotesFromURL();
+			loadNotesFile("Patristica", true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

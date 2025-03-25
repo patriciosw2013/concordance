@@ -33,6 +33,7 @@ public class ImportBibleUtil {
 
     private static SQLUtil db = SQLUtil.getInstance();
 
+	@Deprecated
     public static void importNotesBibleGateway() throws IOException {
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
 			ListUtils.split(Files.readAllLines(new File("D:\\Desarrollo\\1960gateway.txt").toPath(), 
@@ -64,6 +65,7 @@ public class ImportBibleUtil {
 		}
 	}
 
+	@Deprecated
 	public static void loadBible(String base, boolean existHTML) throws SQLException, IOException {
 		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
 		if(!existHTML) {
@@ -204,7 +206,6 @@ public class ImportBibleUtil {
 			try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
 				for(int testId : new int[]{1}) {
 					for(ItemVo b : BibleUtil.booksList(testId, base)) {
-						if(b.getCodigo() < 45) continue;
 						for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
 							String url = String.format("https://www.sobicain.org/it/biblewebapp/?bid=1&bk=%s&cp=%s", 
 								b.getCodigo(), c);
@@ -222,26 +223,43 @@ public class ImportBibleUtil {
 		}
 
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
-			ListUtils.split(Files.readAllLines(new File(fileHtml).toPath(), 
-				StandardCharsets.UTF_8), ">>>>>>").stream().forEach(res -> {
-				writer.println(">>>>>>" + res.get(0));
-				boolean start = false;
-				for(int i = 0; i < res.size(); i++) {
-					String g = res.get(i);
-					if(!start && !g.contains("<sup>1</sup>")) continue;
-					else start = true;
+			List<RecordVo> rds = new ArrayList<>();
+			int chps = 0;
+			for(List<String> res : ListUtils.split(Files.readAllLines(new File(fileHtml).toPath(), 
+				StandardCharsets.UTF_8), ">>>>>>")) {
+				chps++;
+				String txt = res.subList(1, res.size()).stream().collect(Collectors.joining());
+				Elements nds = WebUtil.readNodeTags(txt, "span.versetext");
+				Map<Integer, RecordVo> vrs = new LinkedHashMap<>();
+				RecordVo v = null;
+				int bookId = BibleUtil.bookId(res.get(0).substring(0, res.get(0).lastIndexOf(" ")), base);
+				int chapter = Integer.parseInt(res.get(0).substring(res.get(0).lastIndexOf(" ") + 1));
+				for(Element el : nds) {
+					writer.println(el.html());
 
-					if(g.contains("<sup>0</sup>")) continue;
-
-					if(g.contains("versenumber") || g.contains("versetext"))
-						writer.println(WebUtil.formatHtml(g));
+					Elements sups = WebUtil.readNodeTags(el.html(), "span.versenumber");
+					if(!sups.isEmpty()) {
+						int vr = Integer.parseInt(sups.get(0).text());
+						if(vr == 0) continue;
+						v = new RecordVo(bookId, chapter, vr);
+						v.setText(el.text().replaceAll("^\\d+\\s", ""));
+						vrs.put(vr, v);
+					} else if(v != null) {
+						v.setText(v.getText() == null ? el.text().trim()
+											: v.getText().concat(" ")
+													.concat(el.text().trim()));
+					}
 				}
-			});
+				rds.addAll(vrs.values());
+			}
+			System.out.println(rds.size() + " " + chps);
+			createVerses(rds, base);
+			for (RecordVo o : rds)
+				writer.println(o);
 		}
-
-		extractImportVerses(base);
 	}
 
+	@Deprecated
 	public static void importBookBibleGateway(String base) throws SQLException, IOException {
 		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
 		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
@@ -417,6 +435,7 @@ public class ImportBibleUtil {
 		}
 	}
 
+	@Deprecated
 	public static void importBookYouversion(String base, boolean existHTML) throws SQLException, IOException {
 		String fileHtml = String.format("D:\\Desarrollo\\html_%s.txt", base);
 		if(!existHTML) {
@@ -683,10 +702,10 @@ public class ImportBibleUtil {
 	public static void main(String[] args) {
 		try {
 			//loadText();
-			importBookYouversion2("RVR1960", true);
+			//importBookYouversion2("RVR1960", true);
 			//read("D:\\Desarrollo\\books");
 			//loadBible("NBLA");
-			//loadBibleCatolic("Latinoamericana", true);
+			loadBibleCatolic("Latinoamericana", true);
 			//loadLXX(true);
 			//loadBibleGateway("RVR1960", false);
             //importBookYouversion("NBLA", false);
