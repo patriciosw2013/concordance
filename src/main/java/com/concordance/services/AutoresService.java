@@ -669,10 +669,11 @@ public class AutoresService {
 		List<String> res = new ArrayList<>();
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.text from notes v where v.book_id = ? and (v.chapter = ? or (select sum(x.chapter) from notes x where x.book_id = v.book_id) = 0)";
+			String sql = "select v.text from notes v where v.book_id = ? and (v.chapter = ? or (select sum(x.chapter) from notes x where x.book_id = ?) = 0)";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				st.setInt(1, bookId);
 				st.setInt(2, chapter);
+				st.setInt(3, bookId);
 				result = st.executeQuery();
 				while(result.next())
 					res.add(result.getString(1));

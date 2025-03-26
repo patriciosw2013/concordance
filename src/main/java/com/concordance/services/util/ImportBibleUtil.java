@@ -259,6 +259,70 @@ public class ImportBibleUtil {
 		}
 	}
 
+	public static void loadBibleTodo(String base, boolean existHTML) throws IOException, SQLException {
+		String fileHtml = String.format("D:\\Desarrollo\\html-t-%s.txt", base);
+		if(!existHTML) {
+			try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
+				for(int testId : new int[]{1}) {
+					for(ItemVo b : BibleUtil.booksList(testId, base)) {
+						for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
+							String url = String.format("https://www.bibliatodo.com/la-biblia/Version-septuaginta/%s-%s", 
+                            TextUtils.quitarEspaciosYTildes(b.getValor().toLowerCase()), c);
+                            System.out.println(url);
+                            String txt = WebUtil.readWeb(url, "div#info_capitulo", false);
+							writer.println(">>>>>>");
+							writer.println(b.getCodigo() + " " + c);
+							writer.println(txt);
+							//break;
+						}
+						//break;
+					}
+				}
+			}
+		}
+
+		try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
+			List<RecordVo> rds = new ArrayList<>();
+			int chps = 0;
+			for(List<String> res : ListUtils.split(Files.readAllLines(new File(fileHtml).toPath(), 
+				StandardCharsets.UTF_8), ">>>>>>")) {
+				chps++;
+				String txt = res.subList(1, res.size()).stream().collect(Collectors.joining());
+				Elements nds = WebUtil.readNodeTags(txt, "p");
+				Map<Integer, RecordVo> vrs = new LinkedHashMap<>();
+				RecordVo v = null;
+				String[] codes = res.get(0).split(" ");
+				int bookId = Integer.parseInt(codes[0]);
+				int chapter = Integer.parseInt(codes[1]);
+				for(Element el : nds) {
+					writer.println(el.html());
+
+					Elements sups = WebUtil.readNodeTags(el.html(), "a");
+					if(!sups.isEmpty()) {
+						String vra = sups.get(0).text();
+						if(vra.contains("-"))
+							vra = vra.substring(0, vra.indexOf("-"));
+						int vr = Integer.parseInt(vra);
+						if(vr == 0) continue;
+						v = new RecordVo(bookId, chapter, vr);
+						v.setText(el.text().replaceAll("^\\d+\\s", ""));
+						vrs.put(vr, v);
+					} else if(v != null) {
+						v.setText(v.getText() == null ? el.text().trim()
+											: v.getText().concat(" ")
+													.concat(el.text().trim()));
+					}
+				}
+				rds.addAll(vrs.values());
+			}
+			System.out.println(rds.size() + " " + chps);
+			//createVerses(rds, base);
+			updateTraduction(rds, base);
+			for (RecordVo o : rds)
+				writer.println(o);
+		}
+	}
+
 	@Deprecated
 	public static void importBookBibleGateway(String base) throws SQLException, IOException {
 		String fileHtml = String.format("D:\\Desarrollo\\html-%s.txt", base);
@@ -686,6 +750,30 @@ public class ImportBibleUtil {
 		}
 	}
 
+	public static void updateTraduction(List<RecordVo> verses, String base) throws SQLException {
+		try (Connection conn = db.connection(base)) {
+			conn.setAutoCommit(false);
+			String sql = "update verse set traduction = ? where book_id = ? and chapter = ? and verse = ?";
+			int i = 0;
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				for (RecordVo o : verses) {
+					st.setString(1, o.getText());
+					st.setInt(2, o.getBookId());
+					st.setInt(3, o.getChapterId());
+					st.setInt(4, o.getVerse());
+					
+					st.addBatch();
+					if(i%5000 == 0)
+					st.executeBatch();
+				
+					i++;
+				}
+				st.executeBatch();
+				conn.commit();
+			}
+		}
+	}
+
     public static int max(String table, String base) throws SQLException {
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
@@ -705,7 +793,8 @@ public class ImportBibleUtil {
 			//importBookYouversion2("RVR1960", true);
 			//read("D:\\Desarrollo\\books");
 			//loadBible("NBLA");
-			loadBibleCatolic("Latinoamericana", true);
+			//loadBibleCatolic("Latinoamericana", true);
+			loadBibleTodo("LXX", true);
 			//loadLXX(true);
 			//loadBibleGateway("RVR1960", false);
             //importBookYouversion("NBLA", false);

@@ -113,7 +113,7 @@ public class InterlinealController implements Serializable {
     public void loadReferences(int wordId) {
         try {
             System.out.println("Cargando referencias strongId: " + wordId);
-            references = InterlinealService.strongReference(wordId, "RVR1960", base);
+            references = InterlinealService.strongReference(wordId, base);
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));

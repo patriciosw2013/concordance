@@ -182,26 +182,27 @@ public class InterlinealService {
         return refs;
     }
 
-    public static List<StrongReferenceVo> strongReference(int wordId, String baseVerse, String version) throws SQLException {
+    public static List<StrongReferenceVo> strongReference(int wordId, String version) throws SQLException {
         if(wordId == 0)
             return new ArrayList<>();
 
         List<StrongReferenceVo> res = new ArrayList<>();
         ResultSet result = null;
         try (Connection conn = db.connection(base)) {
-            String sql = String.format("attach database '%s' as db2", SQLUtil.bases.get(baseVerse));
+            String sql = String.format("attach database '%s' as db2", SQLUtil.bases.get(version));
             try (PreparedStatement st = conn.prepareStatement(sql)) {
                 st.executeUpdate();
             }
 
             sql = "select i.chapter, i.verse, st.strong_id, i.word, i.type, i.meaning, i.book_id, " +
-                "trim(v.text) || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' ' || ? || ')', v.id " +
+                "case when vr.id > 1 then coalesce(v.traduction, v.text) else v.text end " +
+                " || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' ' || ? || ')', v.id " +
                 "from interlineal i inner join strong st on (st.id = i.word_id) inner join version vr on (vr.id = i.version) "+
                 "inner join db2.book a on (i.book_id = a.id) " +
                 "inner join db2.verse v on (v.book_id = a.id and v.chapter = i.chapter and v.verse = i.verse) " +
                 "where i.word_Id = ? and vr.name = ?";
             try (PreparedStatement st = conn.prepareStatement(sql)) {
-                st.setString(1, baseVerse);
+                st.setString(1, version);
                 st.setInt(2, wordId);
                 st.setString(3, version);
                 result = st.executeQuery();
