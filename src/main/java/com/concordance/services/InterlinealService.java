@@ -213,7 +213,7 @@ public class InterlinealService {
                     b.setWord(result.getString(4));
                     b.setType(result.getString(5));
                     b.setMeaning(result.getString(6));
-                    b.setReference(result.getString(8));
+                    b.setReference(result.getString(8).replaceAll("\\[\\d+\\]", ""));
                     res.add(b);
                 }
             }

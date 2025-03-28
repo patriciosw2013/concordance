@@ -226,6 +226,10 @@
 				</f:facet>
 				<p:column headerText="Verso" style="width: 68%;">
 					<h:outputText value="#{o.reference}" escape="false" style="white-space:pre-line;" />
+					<p:commandLink id="lnkCopyRef" value=""
+						onclick="copyTxt('#{o.reference}');">
+						<i class="pi pi-clipboard"/>
+					</p:commandLink>
 				</p:column>
 				<p:column headerText="Palabra" style="width: 32%;">
 					<h:outputText value="#{o.strongId}" styleClass="azul" />

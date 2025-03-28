@@ -16,6 +16,7 @@
             margin: 10px;
             padding: 10px;
             padding-top: 5px;
+            padding-bottom: 0;
             font: 14px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
             color: #282828;
             background-color: #FFFFFF;
@@ -49,14 +50,13 @@
     <h:form id="updateForm">
         <script>
             function copyTxt(copyText) {
-                // Copy the text inside the text field
                 navigator.clipboard.writeText(copyText);
             }
         </script>
         <p:messages id="messages" showDetail="true" closable="true">
             <p:autoUpdate />
         </p:messages>
-        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade"
+        <p:dialog id="modalNotes" header="Notas" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade"
             closeOnEscape="true">
             <p:scrollPanel mode="native" id="pnlNotes" style="width: 450px; height: 300px;">
                 <h:outputText value="#{concordanciaController.notes}" styleClass="preformatted" escape="false" />
@@ -89,7 +89,7 @@
                 <p:link href="http://localhost:8080/concordance/search.xhtml" value="Biblia" target="_blank"
                     style="margin-left: 10px;" />
             </h:panelGrid>
-            <p:panelGrid columns="2" layout="grid" style="padding: 20px;">
+            <p:panelGrid columns="2" layout="grid" style="padding: 15px;">
                 <p:row>
                     <p:column></p:column>
                     <p:column>

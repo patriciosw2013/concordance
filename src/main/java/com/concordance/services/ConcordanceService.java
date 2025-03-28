@@ -79,6 +79,8 @@ public class ConcordanceService {
                 contents.getContents().set(i,
                         contents.getContents().get(i).replaceAll(key, "<b><mark>" + key + "</mark></b>"));
                 contents.getContents().set(i,
+                        contents.getContents().get(i).replaceAll("(\\d+)", "<span style=\"font-weight: bold; color: #007ad9;\">$1</span>"));
+                contents.getContents().set(i,
                         WebUtil.replaceLinks(contents.getContents().get(i)));
             }
         }

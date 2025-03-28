@@ -74,7 +74,7 @@
                 <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
                     action="#{searchController.search}" update="searchItems,modalNotes,modalNotesPar" />
             </h:panelGrid>
-            <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 20px;" columnClasses="side-left side-right">
+            <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 15px;" columnClasses="side-left side-right">
                 <h:panelGrid id="head" columns="3" columnClasses="headerGrid headerGrid headerGrid">
                     <p:selectOneMenu id="chapters" value="#{searchController.cita.chapter}" rendered="#{not empty searchController.cita.chapters}">
                         <f:selectItems var="o" value="#{searchController.cita.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
