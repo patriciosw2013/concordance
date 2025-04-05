@@ -6,8 +6,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
+import javax.faces.application.NavigationHandler;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.concordance.services.ConcordanceService;
@@ -33,6 +35,9 @@ public class ConcordanciaController implements Serializable {
     private String notes;
     private String verseId;
 
+    @Inject
+    private InterlinealController interlinealController;
+
     @PostConstruct
     public void init() {
         try {
@@ -48,7 +53,6 @@ public class ConcordanciaController implements Serializable {
     public void search() {
         try {
             verses = ConcordanceService.concordance(input, base, true);
-            System.out.println(verses);
             if (verses.isEmpty())
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_WARN, "Warning", "Sin resultados"));
@@ -71,5 +75,13 @@ public class ConcordanciaController implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
             e.printStackTrace();
         }
+    }
+
+    public void navigateItl() {
+        interlinealController.readParam(verseId);
+
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        NavigationHandler nav = facesContext.getApplication().getNavigationHandler();
+        nav.handleNavigation(facesContext, null, "interlineal.xhtml");
     }
 }

@@ -755,7 +755,7 @@ public class AutoresService {
 							System.out.println("Insertando capitulo: " + o.getChapter() + " " + o.getChapterId());
 							st.setInt(1, o.getChapterId());
 							st.setInt(2, b.getId());
-							st.setString(3, o.getChapter());
+							st.setString(3, o.getChapter().trim());
 							
 							st.addBatch();
 							if(i%5000 == 0)

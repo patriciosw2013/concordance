@@ -194,7 +194,7 @@ public class InterlinealService {
                 st.executeUpdate();
             }
 
-            sql = "select i.chapter, i.verse, st.strong_id, i.word, i.type, i.meaning, i.book_id, " +
+            sql = "select distinct i.chapter, i.verse, st.strong_id, i.word, i.type, i.meaning, i.book_id, " +
                 "case when vr.id > 1 then coalesce(v.traduction, v.text) else v.text end " +
                 " || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' ' || ? || ')', v.id " +
                 "from interlineal i inner join strong st on (st.id = i.word_id) inner join version vr on (vr.id = i.version) "+
@@ -225,7 +225,7 @@ public class InterlinealService {
         List<StrongReferenceVo> res = new ArrayList<>();
         ResultSet result = null;
         try (Connection conn = db.connection(base)) {
-            String sql = "select v.chapter, v.verse, 0, ?, '', '', v.book_id, " +
+            String sql = "select distinct v.chapter, v.verse, 0, ?, '', '', v.book_id, " +
                 "trim(v.text) || ' ' || '(' || a.name || ' ' || v.chapter || ':' || v.verse || ' ' || ? || ')', v.id " +
                 "from book a inner join verse v on (v.book_id = a.id) " +
                 "where v.text like '%' || ? || '%'";
@@ -678,6 +678,7 @@ public class InterlinealService {
 
 		NotationVo nt = new NotationVo();
         nt.setCode(in);
+        nt.setLanguage(language);
         nt.setTipo(descNotation(ext.getTipo(), "tipo"));
         nt.setTiempo(descNotation(ext.getTiempo(), "tiempo"));
         nt.setVoz(descNotation(ext.getVoz(), "voz"));
@@ -859,7 +860,7 @@ public class InterlinealService {
         nt.setLanguage(language);
         if("V".equals(nt.getTipo())) {
             if(s1.length() == 4) {
-                nt.setTiempo(s1.substring(0, 1));
+                nt.setTiempo(s1.substring(0, 2));
                 nt.setVoz(String.valueOf(s1.charAt(2)));
                 nt.setModo(String.valueOf(s1.charAt(3)));
             } else {
@@ -880,6 +881,11 @@ public class InterlinealService {
             }
 
             nt.setSufijo(s3);
+        } else if("P".equals(nt.getTipo()) && (s1.startsWith("1") || s1.startsWith("2") || s1.startsWith("3"))) {
+            nt.setPersona(String.valueOf(s1.charAt(0)));
+            nt.setCaso(String.valueOf(s1.charAt(1)));
+            if(s1.length() == 3)
+                nt.setNumero(String.valueOf(s1.charAt(2)));
         } else {
             nt.setCaso(String.valueOf(s1.charAt(0)));
             nt.setNumero(String.valueOf(s1.charAt(1)));
@@ -1019,7 +1025,8 @@ public class InterlinealService {
 
     public static void main(String[] args) {
         try {
-            interlinealKL(true);
+            //interlinealKL(true);
+            System.out.println(extractNotacion("P-ASM", "griego"));
         } catch (Exception e) {
             e.printStackTrace();
         }

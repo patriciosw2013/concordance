@@ -23,11 +23,11 @@
         }
 
         .side-left {
-            width: 350px;
+            width: 30% !important;
         }
 
         .side-right {
-            width: 900px;
+            width: 70% !important;
         }
 
         .preformatted {
@@ -75,12 +75,12 @@
                     <p:ajax event="valueChange" listener="#{readingController.search}" update="bookTree" />
                 </p:selectOneMenu>
             </h:panelGrid>
-            <p:panelGrid columns="2" layout="grid" style="padding: 20px;" styleClass="side-left side-right">
+            <p:panelGrid columns="2" layout="grid" style="padding: 15px; padding-top: 0; width:100%;" columnClasses="side-left, side-right">
                 <h:panelGroup />
                 <h:panelGroup id="colTitle">
-                    <h:panelGrid columns="2" width="1000">
+                    <h:panelGrid columns="2" width="100%">
                         <h:outputText id="txtTitle"
-                            style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px; width: 800px;"
+                            style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px; width: 100%;"
                             value="#{readingController.title}" />
 
                         <h:panelGroup styleClass="right-aligned">
@@ -113,7 +113,7 @@
                     </p:column>
                 </p:treeTable>
 
-                <p:scrollPanel mode="native" id="pnl" style="width: 1000px; height: 520px;">
+                <p:scrollPanel mode="native" id="pnl" style="width: 100%; height: 520px;">
                     <h:outputText value="#{readingController.txt}" styleClass="preformatted" escape="false" />
                 </p:scrollPanel>
             </p:panelGrid>

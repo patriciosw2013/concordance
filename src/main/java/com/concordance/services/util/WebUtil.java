@@ -140,7 +140,7 @@ public class WebUtil {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(in);
 
-        return matcher.replaceAll("<a href=\"$0\">$0</a>");
+        return matcher.replaceAll("<a href=\"$0\" target=\"_blank\">$0</a>");
     }
 
     public static String formatHtml(String in) {

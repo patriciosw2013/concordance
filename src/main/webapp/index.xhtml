@@ -34,16 +34,28 @@
         .ui-scrollpanel-hbar {
             overflow-x: initial;
         }
+		
+		.side-left {
+            width: 46% !important;
+        }
+
+        .side-right {
+            width: 54% !important;
+        }
 
         .panelGroup {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+			height:25px;
         }
+		
+		.panelGroup .align-left {
+			display: flex;
+		}
 
-        .align-right {
-            margin-left: auto;
-        }
+		.panelGroup .align-right {
+			margin-left: auto;
+		}
     </style>
 </h:head>
 <h:body>
@@ -67,7 +79,7 @@
                 <p:inputText id="float-input" value="#{concordanciaController.input}" />
 
                 <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
-                    action="#{concordanciaController.search}" update="searchItems" />
+                    action="#{concordanciaController.search}" update="searchItems,ctx" />
 
                 <p:divider layout="vertical" style="width: 100px;" />
 
@@ -89,34 +101,44 @@
                 <p:link href="http://localhost:8080/concordance/search.xhtml" value="Biblia" target="_blank"
                     style="margin-left: 10px;" />
             </h:panelGrid>
-            <p:panelGrid columns="2" layout="grid" style="padding: 15px;">
+            <p:panelGrid columns="2" layout="grid" style="padding: 15px; width: 100%;" columnClasses="side-left, side-right">
                 <p:row>
                     <p:column></p:column>
                     <p:column>
                         <h:panelGroup id="colTitle" styleClass="panelGroup">
-                            <h:outputText id="txtTitle"
-                                style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px;"
-                                value="#{concordanciaController.title}" />
+							<h:panelGroup styleClass="align-left">
+								<h:outputText id="txtTitle"
+									style="font-weight: bold; font-size: 14px; padding-right:5px;"
+									value="#{concordanciaController.title}" />
+								<p:commandLink id="lnkCopyRef" value="" rendered="#{not empty concordanciaController.title}"
+									onclick="copyTxt('#{concordanciaController.title}');">
+									<i class="pi pi-clipboard"/>
+								</p:commandLink>
+							</h:panelGroup>
 
                             <p:commandButton value="" rendered="#{not empty concordanciaController.notes}" type="button"
                                 icon="pi pi-pen-to-square"
                                 styleClass="align-right rounded-button ui-button-secondary ui-button-outlined"
-                                style="height:32px;width:32px;margin-left:10px;" onclick="PF('dlg1').show()" />
+                                style="height:32px;width:32px;" onclick="PF('dlg1').show()" />
                         </h:panelGroup>
                     </p:column>
                 </p:row>
                 <p:selectOneListbox id="searchItems" value="#{concordanciaController.verseId}" scrollHeight="520"
-                    style="width: 650px; height: 520px; font-size: 14px;" widgetVar="selIt">
+                    style="width: 100%; height: 520px; font-size: 14px;" widgetVar="selIt">
                     <f:selectItems var="o" value="#{concordanciaController.verses}" itemLabel="#{o.text}"
                         itemLabelEscaped="false" itemValue="#{o.recordId}" />
                     <p:ajax event="itemSelect" listener="#{concordanciaController.onSelect()}"
-                        update="pnl,modalNotes,colTitle" oncomplete="copyTxt(PF('selIt').focusedItem.text());" />
+                        update="pnl,modalNotes,colTitle,ctx" oncomplete="copyTxt(PF('selIt').focusedItem.text());" />
                 </p:selectOneListbox>
 
-                <p:scrollPanel mode="native" id="pnl" style="width: 700px; height: 520px;">
+                <p:scrollPanel mode="native" id="pnl" style="width: 100%; height: 520px;">
                     <h:outputText value="#{concordanciaController.txt}" styleClass="preformatted" escape="false" />
                 </p:scrollPanel>
             </p:panelGrid>
+			<p:contextMenu id="ctx" for="searchItems">
+                <p:menuitem value="Interlineal" icon="pi pi-search" target="_blank" rendered="#{concordanciaController.base eq 'RVR1960'}" 
+                    url="http://localhost:8080/concordance/interlineal.xhtml?in=#{concordanciaController.verseId}" />
+            </p:contextMenu>
         </div>
     </h:form>
 </h:body>

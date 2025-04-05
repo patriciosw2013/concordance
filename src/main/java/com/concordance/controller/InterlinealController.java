@@ -14,7 +14,9 @@ import com.concordance.exceptions.GenericException;
 import com.concordance.services.ConcordanceService;
 import com.concordance.services.InterlinealService;
 import com.concordance.services.util.BibleUtil;
+import com.concordance.services.vo.Book;
 import com.concordance.services.vo.ItemVo;
+import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.Verse;
 import com.concordance.services.vo.bible.CitaVo;
 import com.concordance.services.vo.interlineal.InterlinealVo;
@@ -52,10 +54,24 @@ public class InterlinealController implements Serializable {
         try {
             bases = ConcordanceService.basesInterlineal();
             base = bases.get(0);
+            evaluateParam();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
             e.printStackTrace();
+        }
+    }
+
+    private void evaluateParam() throws SQLException {
+        FacesContext context = FacesContext.getCurrentInstance();
+        String param = context.getExternalContext().getRequestParameterMap().get("in");
+        if(param != null) {
+            System.out.println("Cargando itl verseid: " + param);
+            int id = Integer.parseInt(param);
+            RecordVo r = BibleUtil.verse(id, base);
+            Book b = BibleUtil.book(r.getBookId(), base);
+            input = b.getName() + " " + r.getChapterId() + ":" + r.getVerse();
+            evaluate();
         }
     }
 
@@ -185,5 +201,10 @@ public class InterlinealController implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
             e.printStackTrace();
         }
+    }
+
+    public void readParam(String id) {
+        System.out.println(id);
+        input = id;
     }
 }

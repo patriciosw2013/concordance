@@ -35,9 +35,17 @@
 		}
 
         .panelRead {
-            width: 675px;
-            height: 520px;
+            width: 100%;
+            height: 510px;
         }
+		
+		.navigatePanel {
+			background-color: #f2f2f2;
+			display: flex; 
+			justify-content: space-between; 
+			align-items: center; 
+			width: 100%;
+		}
 
         .preformatted {
             white-space: pre-wrap;
@@ -74,7 +82,7 @@
                 <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
                     action="#{searchController.search}" update="searchItems,modalNotes,modalNotesPar" />
             </h:panelGrid>
-            <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 15px;" columnClasses="side-left side-right">
+            <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 15px; width: 100%;">
                 <h:panelGrid id="head" columns="3" columnClasses="headerGrid headerGrid headerGrid">
                     <p:selectOneMenu id="chapters" value="#{searchController.cita.chapter}" rendered="#{not empty searchController.cita.chapters}">
                         <f:selectItems var="o" value="#{searchController.cita.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
@@ -105,7 +113,7 @@
                 </h:panelGrid>
 
                 <p:scrollPanel mode="native" id="pnl" styleClass="panelRead">
-					<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+					<div class="navigatePanel">
                         <p:commandLink value="" action="#{searchController.navigate(1, 0)}" update="updateForm:searchItems">
 							<i class="pi pi-caret-left" />
                         </p:commandLink>
@@ -117,7 +125,7 @@
                 </p:scrollPanel>
 
                 <p:scrollPanel mode="native" id="pnlPar" styleClass="panelRead">
-					<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+					<div class="navigatePanel">
                         <p:commandLink value="" action="#{searchController.navigate(2, 0)}" update="updateForm:searchItems">
 							<i class="pi pi-caret-left" />
                         </p:commandLink>

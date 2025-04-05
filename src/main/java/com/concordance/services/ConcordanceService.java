@@ -71,15 +71,18 @@ public class ConcordanceService {
             vr = BibleUtil.verse(verseId, base);
             contents = BibleUtil.readContentsForVerse(verseId, base);
             notes = BibleUtil.readNotes(book.getId(), vr.getChapterId(), base);
-            label = book.getName() + ": " + contents.getChapter();
+            label = book.getName() + " " + contents.getChapter();
         }
 
         if (highlight) {
+            String numRex = DBUtil.type(base) == Const.TYPE_NOTES ? "(\\d+)" : "(^\\d+)";
+            String numFormat = "<span style=\"font-weight: bold; color: #007ad9;\">$1</span>";
+            String keyFormat = "<b><mark>" + key + "</mark></b>";
             for (int i = 0; i < contents.getContents().size(); i++) {
                 contents.getContents().set(i,
-                        contents.getContents().get(i).replaceAll(key, "<b><mark>" + key + "</mark></b>"));
+                        contents.getContents().get(i).replaceAll(key, keyFormat));
                 contents.getContents().set(i,
-                        contents.getContents().get(i).replaceAll("(\\d+)", "<span style=\"font-weight: bold; color: #007ad9;\">$1</span>"));
+                        contents.getContents().get(i).replaceAll(numRex, numFormat));
                 contents.getContents().set(i,
                         WebUtil.replaceLinks(contents.getContents().get(i)));
             }
@@ -108,7 +111,7 @@ public class ConcordanceService {
             int chapterId = chapters.get(0).getCodigo();
             contents = BibleUtil.readContents(bookId, chapter == 0 ? chapterId : chapter, base);
             notes = BibleUtil.readNotes(bookId, chapterId, base);
-            label = book.getName() + ": " + contents.getChapter();
+            label = book.getName() + " " + contents.getChapter();
         }
 
         contents.setChapter(label);
@@ -132,7 +135,7 @@ public class ConcordanceService {
             e1.printStackTrace();
         }
 
-        label = b.getName() + ": " + contents.getChapter();
+        label = b.getName() + " " + contents.getChapter();
         contents.setChapter(label);
         return new ResultsVo(b, contents, notes, chapters);
     }

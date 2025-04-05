@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.concordance.exceptions.GenericException;
 import com.concordance.services.AutoresService;
 import com.concordance.services.vo.Book;
 import com.concordance.services.vo.RecordVo;
@@ -183,7 +184,12 @@ public class NotesUtil extends AutoresService {
 					chapter = key[3];
 
 					bookId = AutoresService.bookId(seccion, obra, autor, base);
-					chapterId = chapter != null ? AutoresService.chapterId(bookId, chapter, base) : 0;
+					chapterId = 0;
+					if(chapter != null) {
+						chapterId = AutoresService.chapterId(bookId, chapter, base);
+						if(chapterId == 0)
+							throw new GenericException("Capitulo errado: " + chapter);
+					}
 					continue;
 				}
 				res.add(new NoteBibleVo(bookId, chapterId, x));
@@ -226,7 +232,7 @@ public class NotesUtil extends AutoresService {
 	public static void main(String[] args) {
 		try {
 			//readNotesFromURL();
-			loadNotesFile("Patristica", true);
+			loadNotesFile("Patristica", false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
