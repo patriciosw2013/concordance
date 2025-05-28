@@ -30,7 +30,7 @@ public class BibleUtil implements Serializable {
 	private static SQLUtil db = SQLUtil.getInstance();
 
 	public static CitaVo extractRef(String texto) throws SQLException {
-		String regex = "([\\d]*[\\p{L}\\.\\s]+)\\s(\\d+)(?::(\\d+))?(?:-(\\d+))?";
+		String regex = "([\\d]*[\\p{L}\\.\\s]+)\\s(\\d+)(?:[:|,](\\d+))?(?:-(\\d+))?";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(texto);
 
@@ -48,22 +48,7 @@ public class BibleUtil implements Serializable {
 
 	/* Obtiene la cita incluida la version */
 	public static CitaVo cita(String texto) throws SQLException {
-		/*int index = TextUtils.indexOf(in, "\\d+");
-		if (index == 0)
-			index = TextUtils.indexOf(in.substring(index + 1), "\\d+") + 1;
-
-		String bk = in.substring(0, index).trim();
-		int cap = Integer.parseInt(in.substring(index, in.indexOf(":")));
-		String verStr = TextUtils.textBetween(in, ":", " ");
-		String version = in.substring(in.lastIndexOf(" ") + 1);
-		
-		List<Integer> ver = Arrays.asList(verStr.split("-")).stream()
-				.map(i -> Integer.parseInt(i)).collect(Collectors.toList());
-		int v1 = ver.get(0);
-		int v2 = ver.size() > 1 ? ver.get(1) : v1;
-		
-		return new CitaVo(0, bk, cap, v1, v2, version);*/
-		String regex = "([\\d]*[\\p{L}\\.\\s]+)\\s(\\d+)(?::(\\d+))?(?:-(\\d+))?(?: (\\w+))?";
+		String regex = "([\\d]*[\\p{L}\\.\\s]+)\\s(\\d+)(?:[:|,](\\d+))?(?:-(\\d+))?(?: (\\w+))?";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(texto);
 
@@ -90,17 +75,20 @@ public class BibleUtil implements Serializable {
 		}
 		
 		ResultSet result = null;
+		String book = vr.getBook().replace(".", "");
 		try (Connection conn = db.connection(vr.getVersion())) {
 			String sql = "select a.name, b.chapter, b.verse, "
 					+ "replace(replace(replace(replace(replace(replace(b.text, char(13), ''), char(10), ''), '*', ''), '«', ''), '»', ''), '—', '') as text "
 					+ "from book a inner join verse b on (a.id = b.book_id) "
-					+ "where (a.abbreviation = ? collate nocase or a.name = ? collate nocase) and b.chapter = ? and b.verse between ? and ? ";
+					+ "where (a.abbreviation = ? collate nocase or a.abb = ? collate nocase or a.name = ? collate nocase) "
+					+ "and b.chapter = ? and b.verse between ? and ? ";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				st.setString(1, vr.getBook());
-				st.setString(2, vr.getBook());
-				st.setInt(3, vr.getChapter());
-				st.setInt(4, vr.getVerseIni());
-				st.setInt(5, vr.getVerseFin());
+				st.setString(1, book);
+				st.setString(2, book);
+				st.setString(3, book);
+				st.setInt(4, vr.getChapter());
+				st.setInt(5, vr.getVerseIni());
+				st.setInt(6, vr.getVerseFin());
 				result = st.executeQuery();
 				List<Verse> res = new ArrayList<>();
 				while (result.next()) {
@@ -257,11 +245,13 @@ public class BibleUtil implements Serializable {
 
 	public static Book book(String name, String base) throws SQLException {
 		ResultSet result = null;
+		String book = name.replace(".", "");
 		try (Connection conn = db.connection(base)) {
-			String sql = "select v.id, v.name from book v where v.name = ? collate nocase or v.abbreviation = ? collate nocase";
+			String sql = "select v.id, v.name from book v where v.name = ? collate nocase or v.abbreviation = ? collate nocase or v.abb = ? collate nocase";
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
-				st.setString(1, name);
-				st.setString(2, name);
+				st.setString(1, book);
+				st.setString(2, book);
+				st.setString(3, book);
 				result = st.executeQuery();
 				result.next();
 				Book b = new Book();
@@ -466,15 +456,15 @@ public class BibleUtil implements Serializable {
 		return new ContentVo(chp, String.valueOf(chp), res);
 	}
 
-	public static ContentVo readContents(CitaVo in) throws SQLException {
+	public static ContentVo readContents(CitaVo in, boolean verse, boolean cross, boolean title) throws SQLException {
 		if(in.getBookId() == 0)
 			return null;
 		
-		List<String> res = new ArrayList<>();
+		List<String[]> res = new ArrayList<>();
 		ResultSet result = null;
 		int chp = 0;
 		try (Connection conn = db.connection(in.getVersion())) {
-			String sql = "select v.chapter, v.verse || ' ' || trim(v.text) from verse v where v.book_id = ? and v.chapter = ? " +
+			String sql = "select v.chapter, v.verse, v.title, trim(v.text) from verse v where v.book_id = ? and v.chapter = ? " +
 				(in.getVerseIni() > 0 && in.getVerseFin() > 0 ? "and v.verse between ? and ?" : "");
 			try (PreparedStatement st = conn.prepareStatement(sql)) {
 				st.setInt(1, in.getBookId());
@@ -486,12 +476,18 @@ public class BibleUtil implements Serializable {
 				result = st.executeQuery();
 				while(result.next()) {
 					chp = result.getInt(1);
-					res.add(result.getString(2));
+					res.add(new String[] {result.getString(2), result.getString(3), result.getString(4)});
 				}
 			}
 		}
 		
-		return new ContentVo(chp, String.valueOf(chp), res);
+		return new ContentVo(chp, String.valueOf(chp), res.stream().map(i -> {
+				String txt = i[2];
+				if(verse) txt = i[0] + " " + txt;
+				if(title && !TextUtils.isEmpty(i[1])) txt = String.format("<b>%s</b>\n%s", i[1], txt);
+				if(!cross) txt = txt.replaceAll("\\[\\d+\\]", "");
+				return txt;
+			}).collect(Collectors.toList()));
 	}
 	
 	public static ContentVo readContentsForVerse(int verseId, String base) throws SQLException {
@@ -545,6 +541,9 @@ public class BibleUtil implements Serializable {
 			System.out.println(extractRef("Romanos 12:1"));
 			System.out.println(extractRef("Rom. 12:1-5"));
 			System.out.println(extractRef("Rom. 12"));
+			System.out.println(extractRef("Rm 12"));
+			System.out.println(extractRef("Rm 12:1"));
+			System.out.println(extractRef("Rm 12,2"));
 
 			System.out.println(cita("1 Cor. 12:1 NTV"));
 			System.out.println(cita("1 Corintios 12:1-5 Vulgata"));
@@ -552,6 +551,9 @@ public class BibleUtil implements Serializable {
 			System.out.println(cita("Romanos 12:1 Latinoamericana"));
 			System.out.println(cita("Rom. 12:1-5 DHH"));
 			System.out.println(cita("Romanos 12 TLA"));
+			System.out.println(cita("Rm 12 LXX"));
+			System.out.println(cita("Rm 12:1 LXX"));
+			System.out.println(cita("Rm 12,2 LXX"));
 
 			//System.out.println(verses("Mateo 1:1"));
 		} catch (Exception e) {

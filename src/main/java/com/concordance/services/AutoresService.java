@@ -66,11 +66,10 @@ public class AutoresService {
 			.chapterKey(null).verseKey(".").joiningKey("\n").build());
 		complex.put("Gregorio Magno - Libros morales", BookMetadata.builder().keySplit("^(LIBRO|PREFACIO).*")
 			.indexTitle(-1)
-			.chapter(true).verses(true)
 			.regexChapter("^([MDCLXVI]+\\.|Prefacio).*$").regexVerses("^\\d+(\\. ).*?")
 			.chapterKey(". ").verseKey(".").joiningKey("\n").chpTogether(true).build());
-		complex.put("Ireneo de Lyon - Contra las herejias", BookMetadata.builder().keySplit("^(LIBRO).*")
-			.indexTitle(-1).build());
+		complex.put("Ireneo de Lyon - Contra las herejías", BookMetadata.builder().keySplit("^(LIBRO).*")
+			.indexTitle(0).joiningKey("\n").build());
 		complex.put("Origenes de Alejandria - Contra Celso", BookMetadata.builder().keySplit("^(LIBRO).*")
 			.indexTitle(-1)
 			.chapter(false).verses(true).build());
@@ -134,9 +133,12 @@ public class AutoresService {
 			.chapterKey(null).verseKey(".").joiningKey("\n").build());
 		complex.put("Agustin de Hipona - Exposicion de la carta a los Galatas", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.chapter(false).verses(true)
-			.regexChapter(null).regexVerses("^\\d+(\\.).*?")
-			.chapterKey(null).verseKey(".").joiningKey("\n").build());
+			.regexChapter("^(COMENTARIO|EXPOSICIÓN).*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Exposicion de textos de Romanos", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(COMENTARIO|EXPOSICIÓN).*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
 		complex.put("Agustin de Hipona - La Trinidad", BookMetadata.builder().keySplit("^(LIBRO).*")
 			.indexTitle(0)
 			.chapter(true).verses(true)
@@ -222,6 +224,62 @@ public class AutoresService {
 		complex.put("Atanasio de Alejandria - Contra los arrianos", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
 			.regexChapter("^(DISCURSO [MDCLXVI]+)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Ireneo de Lyon - Demostración de la enseñanza apostólica", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter(null).regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La perfección de la justicia del hombre", BookMetadata.builder().keySplit(null)
+			.indexTitle(0)
+			.regexChapter("^([MDCLXVI]+)\\s.*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").chpTogether(true).build());
+		complex.put("Agustin de Hipona - Consecuencias y perdón de los pecados, y el bautismo de los niños", BookMetadata.builder().keySplit("^LIBRO.*")
+			.indexTitle(-1)
+			.regexChapter("^([MDCLXVI]+).*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").chpTogether(true).build());
+		complex.put("Agustin de Hipona - La corrección y la gracia", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(CAPÍTULO [MDCLXVI]+)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("El Pastor de Hermas", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^([Visión|Parábola]+.*)").regexVerses("^\\[(\\d+)\\].*")
+			.joiningKey("\n").build());
+		complex.put("Fragmento Muratoriano", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter(null).regexVerses("^\\((\\d+)\\).*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Cuestiones sobre los evangelios", BookMetadata.builder().keySplit("^LIBRO.*")
+			.indexTitle(-1)
+			.regexChapter(null).regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Las retractaciones", BookMetadata.builder().keySplit("^LIBRO.*")
+			.indexTitle(-1)
+			.regexChapter("^(\\d+\\.\\s[A-Z]+.*)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La fe y el símbolo de los apóstoles", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(Testimonio|Motivo|Artículo [MDCLXVI]+).*").regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La fe y las obras", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter(null).regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Respuesta a las ocho preguntas de Dulcicio", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(Prólogo|Pregunta [MDCLXVI]+).*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La paciencia", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(CAPÍTULO [MDCLXVI]+)").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El libre albedrío", BookMetadata.builder().keySplit("^LIBRO.*")
+			.indexTitle(-1)
+			.regexChapter("^([MDCLXVI]+)\\s.*").regexVerses("^(\\d+)\\..*")
+			.chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Diecisiete cuestiones sobre el evangelio de Mateo", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(Cuestión \\d+.*)").regexVerses(null)
 			.joiningKey("\n").build());
 
 		/* Autores */
@@ -330,6 +388,10 @@ public class AutoresService {
 		complex.put("Denzinger", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
 			.regexChapter("^(SIMBOLOS|DOCUMENTOS.*)").regexVerses("^D-(\\d+).*")
+			.joiningKey("\n").build());
+		complex.put("Karl Barth - Carta a los Romanos", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.regexChapter("^(CAPÍTULO.*)").regexVerses(null)
 			.joiningKey("\n").build());
 	}
     
@@ -587,6 +649,16 @@ public class AutoresService {
 		}
 	}
 
+	public static void deleteNotes(int bookId, String base) throws SQLException {
+		System.out.println("Borrando notas libro " + bookId);
+		try (Connection conn = db.connection(base)) {
+			String sql = "delete from notes where book_id = " + bookId;
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				st.executeUpdate();
+			}
+		}
+	}
+
 	public static boolean existBook(String name, String parent, String autor, String base) throws SQLException {
 		ResultSet result = null;
 		try (Connection conn = db.connection(base)) {
@@ -722,6 +794,7 @@ public class AutoresService {
 					b.setId(bookId(b.getName(), b.getParent(), b.getAutor(), base));
 					deleteVerses(b.getId(), base);
 					deleteChapters(b.getId(), base);
+					deleteNotes(b.getId(), base);
 				} else {
 					System.out.println("Insertando: " + b.getParent() + ": " + b.getName() + " " + (cont++) + " de " + total);
 					b.setId(DBUtil.max("book", base) + 1);

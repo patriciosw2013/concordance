@@ -139,8 +139,8 @@ public class FileUtils {
 						if(!meta.isChpTogether())
 							pars.add(new Paragraph(z.getKey(), 0, z.getValue().get(0)));
 
-						pars.addAll(ListUtils.groupByRegex(z.getValue().subList(meta.isChpTogether() ? 0 : 1, z.getValue().size()), 
-							meta.getRegexVerses()).entrySet().stream().map(c -> new Paragraph(z.getKey(), "".equals(c.getKey()) ? TextUtils.extractNumber(c.getValue().get(0)) : Integer.parseInt(c.getKey()), 
+						pars.addAll(ListUtils.groupBy(z.getValue().subList(meta.isChpTogether() ? 0 : 1, z.getValue().size()), 
+							meta.getRegexVerses()).stream().map(c -> new Paragraph(z.getKey(), "".equals(c.getKey()) ? TextUtils.extractNumber(c.getValue().get(0)) : Integer.parseInt(c.getKey()), 
 								c.getValue().stream().collect(Collectors.joining(meta.getJoiningKey())))).collect(Collectors.toList()));
 						return pars.stream();
 					}).collect(Collectors.toList()));
@@ -372,7 +372,7 @@ public class FileUtils {
 
 	public static void main(String[] args) {
 		try {
-			BookMetadata meta = BookMetadata.builder().keySplit("^(LIBRO).*")
+			/*BookMetadata meta = BookMetadata.builder().keySplit("^(LIBRO).*")
 				.indexTitle(0)
 				.chapter(true).verses(true)
 				.regexChapter("^(CAP \\d+)\\..*").regexVerses("^(?:CAP \\d+\\.\\s)?(\\d+)\\..*")
@@ -381,6 +381,18 @@ public class FileUtils {
 				String bookName = "Test";
 				for(Book x : splitDocx(bookName, "D:\\Libros\\" + bookName + ".docx", meta)) {
 					writer.println(x);
+				}
+			}*/
+
+			BookMetadata meta = BookMetadata.builder().keySplit("^(LIBRO).*")
+				.indexTitle(-1)
+				.regexChapter("^(SALMO \\d+.*)").regexVerses("^(\\d+)\\..*")
+				.joiningKey("\n").build();
+			try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+				String bookName = "Test";
+				for(Book x : processDoc(bookName, "D:\\Libros\\Patristica\\" + bookName + ".docx", meta)) {
+					for(Paragraph p : x.getParagraphs())
+						writer.println(p.getText());
 				}
 			}
 		} catch (Exception e) {

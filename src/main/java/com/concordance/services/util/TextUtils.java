@@ -27,10 +27,10 @@ public class TextUtils {
 	}
 
 	public static int extractNumber(String in) {
-        Pattern p = Pattern.compile("^\\d+");
-        Matcher m = p.matcher(in);
+        Pattern p = Pattern.compile("(\\d+)\\.");
+        Matcher m = p.matcher(in.trim());
 		if(m.find())
-			return Integer.parseInt(m.group());
+			return Integer.parseInt(m.group(1));
         
 		return 0;
 	}

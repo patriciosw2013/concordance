@@ -75,25 +75,34 @@
                     <p:ajax event="valueChange" listener="#{readingController.search}" update="bookTree" />
                 </p:selectOneMenu>
             </h:panelGrid>
-            <p:panelGrid columns="2" layout="grid" style="padding: 15px; padding-top: 0; width:100%;" columnClasses="side-left, side-right">
+            <p:panelGrid columns="2" layout="grid" style="padding: 15px; padding-top: 0; width:100%;"
+                columnClasses="side-left, side-right">
                 <h:panelGroup />
                 <h:panelGroup id="colTitle">
                     <h:panelGrid columns="2" width="100%">
-                        <h:outputText id="txtTitle"
-                            style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px; width: 100%;"
-                            value="#{readingController.title}" />
+                        <h:panelGroup>
+                            <h:outputText id="txtTitle"
+                                style="font-weight: bold; text-align:center; font-size: 14px; padding-right:20px; width: 100%;"
+                                value="#{readingController.title}" />
+                            <p:commandLink id="lnkCopyRef" value="" rendered="#{not empty readingController.title}"
+                                onclick="copyTxt('#{readingController.title}');">
+                                <i class="pi pi-clipboard" />
+                            </p:commandLink>
+                        </h:panelGroup>
 
                         <h:panelGroup styleClass="right-aligned">
-                            <p:commandButton value="" icon="pi pi-file-pdf" styleClass="rounded-button ui-button-secondary ui-button-outlined"
-                                rendered="false"
-                                style="height:32px;width:32px;margin-left:10px;" action="#{readingController.exportarPDF}" ajax="false" />
+                            <p:commandButton value="" icon="pi pi-file-pdf"
+                                styleClass="rounded-button ui-button-secondary ui-button-outlined" rendered="false"
+                                style="height:32px;width:32px;margin-left:10px;"
+                                action="#{readingController.exportarPDF}" ajax="false" />
 
                             <p:commandButton value="" rendered="#{not empty readingController.notes}" type="button"
-                                icon="pi pi-pen-to-square" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                                icon="pi pi-pen-to-square"
+                                styleClass="rounded-button ui-button-secondary ui-button-outlined"
                                 style="height:32px;width:32px;margin-left:10px;" onclick="PF('dlg1').show()" />
 
-                            <p:selectOneMenu id="chapters" value="#{readingController.chapter}" style="max-width: 400px;"
-                                rendered="#{not empty readingController.chapters}">
+                            <p:selectOneMenu id="chapters" value="#{readingController.chapter}"
+                                style="max-width: 400px;" rendered="#{not empty readingController.chapters}">
                                 <f:selectItems var="o" value="#{readingController.chapters}" itemLabel="#{o.valor}"
                                     itemValue="#{o.codigo}" />
                                 <p:ajax event="valueChange" listener="#{readingController.viewChapter}"

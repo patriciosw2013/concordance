@@ -8,8 +8,8 @@ public class AutoresUtil extends AutoresService {
 
     public static void main(String[] args) {
         try {
-			String base = "Concilios";
-			for(String name : Arrays.asList("Denzinger"))
+			String base = "Autores";
+			for(String name : Arrays.asList("Karl Barth - Carta a los Romanos"))
             	read("D:\\Libros\\" + name + ".docx", base, false);
         } catch (Exception e) {
             e.printStackTrace();

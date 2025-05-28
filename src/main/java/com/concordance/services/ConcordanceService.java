@@ -2,6 +2,7 @@ package com.concordance.services;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,6 +66,7 @@ public class ConcordanceService {
             book = NotesUtil.bookForVerse(verseId, base);
             vr = NotesUtil.verse(verseId, base);
             contents = AutoresService.readContents(book.getId(), vr.getChapterId(), base);
+            notes = AutoresService.readNotes(book.getId(), vr.getChapterId(), base);
             label = label(book, contents.getChapter());
         } else {
             book = BibleUtil.bookForVerse(verseId, base);
@@ -118,7 +120,7 @@ public class ConcordanceService {
         return new ResultsVo(book, contents, notes, chapters);
     }
 
-    public static ResultsVo readContents(CitaVo in) {
+    public static ResultsVo readContents(CitaVo in, boolean verse, boolean cross, boolean title, boolean highlight) {
         ContentVo contents = null;
         Book b = new Book();
         int bookId = in.getBookId();
@@ -129,10 +131,19 @@ public class ConcordanceService {
         try {
             b = BibleUtil.book(bookId, base);
             chapters = BibleUtil.chapters(bookId, base);
-            contents = BibleUtil.readContents(in);
+            contents = BibleUtil.readContents(in, verse, cross, title);
             notes = BibleUtil.readNotes(bookId, in.getChapter(), base);
         } catch (Exception e1) {
             e1.printStackTrace();
+        }
+
+        if (highlight) {
+            String numRex = "^(\\d+)";
+            String numFormat = "<span style=\"font-weight: bold; color: #007ad9;\">$1</span>";
+            for (int i = 0; i < contents.getContents().size(); i++) {
+                contents.getContents().set(i,
+                        contents.getContents().get(i).replaceAll(numRex, numFormat));
+            }
         }
 
         label = b.getName() + " " + contents.getChapter();
@@ -148,8 +159,12 @@ public class ConcordanceService {
         res.add(b.getTitle());
         res.add(chapter);
 
+        Set<String> excep = new HashSet<>();
+        excep.add("Sermones");
+        excep.add("Cartas");
+
         return formatLabel(
-                res.stream().filter(i -> !TextUtils.isEmpty(i) && !"Sermones".equals(i))
+                res.stream().filter(i -> !TextUtils.isEmpty(i) && !excep.contains(i))
                         .map(i -> i.length() > 60 ? i.substring(0, 60) : i)
                         .collect(Collectors.joining(", ")));
     }
@@ -159,10 +174,12 @@ public class ConcordanceService {
         label = label.replaceAll("SERMÓN", "sermón");
         label = label.replaceAll("CARTA", "carta");
         label = label.replaceAll("TRATADO ", "");
-        label = label.replaceAll("CATEQUESIS", "catequesis");
+        label = label.replaceAll("CATEQUESIS", "");
         label = label.replaceAll("HOMILÍA", "homilía");
         label = label.replaceAll("LIBRO", "Lib.");
         label = label.replaceAll("CAPÍTULO", "Cap.");
+        label = label.replaceAll("Capítulo", "Cap.");
+        label = label.replaceAll("Libro", "Lib.");
 
         return label;
     }

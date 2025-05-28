@@ -102,9 +102,7 @@
 			background-color: #f2f2f2;
 			/* Fondo gris */
 			padding: 10px;
-			/* Espaciado interno */
-			/*border: 2px solid #d3d3d3;  Borde gris */
-			/*border-radius: 5px;  Bordes redondeados */
+			border-radius: 3px;  /* Bordes redondeados */
 			margin-top: 15px;
 		}
 
@@ -129,6 +127,33 @@
 
 		.rojo {
 			color: #d9534f;
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			display: inline-block;
+		}
+
+		.dot-rojo {
+			background-color: red;
+		}
+		.dot-azul {
+			background-color: #007ad9;
+		}
+		.dot-verde {
+			background-color: green;
+		}
+		.dot-amarillo {
+			background-color: yellow;
+		}
+		.dot-morado {
+			background-color: purple;
+		}
+		.dot-transparente {
+			background-color: transparent;
+			/*border: 1px solid #ccc;*/
 		}
 	</style>
 </h:head>
@@ -212,6 +237,13 @@
 							<p:tooltip for="right" value="#{o.morfologic}" position="right" />
 						</div>
 						<div class="item-meanign">#{o.meaning}</div>
+						<div>
+							<span class="dot #{o.notation.tipo eq 'Verbo' ? 'dot-rojo' : 'dot-transparente'}"/>
+							<span class="dot #{o.notation.tiempo eq 'Perfecto' ? 'dot-azul' : 
+								o.notation.tiempo eq 'Imperfecto' ? 'dot-morado' : 
+								o.notation.voz eq 'Pasiva' ? 'dot-verde' : 
+								o.notation.modo eq 'Subjuntivo' ? 'dot-amarillo' : 'dot-transparente'}"/>
+						</div>
 					</div>
 				</p:dataGrid>
 			</h:panelGrid>
@@ -225,9 +257,9 @@
 					#{interlinealController.references.size()} usos
 				</f:facet>
 				<p:column headerText="Verso" style="width: 68%;">
-					<h:outputText value="#{o.reference}" escape="false" style="white-space:pre-line;" />
+					<h:outputText id="txtReference" value="#{o.reference}" escape="false" style="white-space:pre-line;" />
 					<p:commandLink id="lnkCopyRef" value=""
-						onclick="copyTxt('#{o.reference}');">
+						onclick="copyTxt(document.getElementById('updateForm:issues:#{rowIndex}:txtReference').innerText);">
 						<i class="pi pi-clipboard"/>
 					</p:commandLink>
 				</p:column>

@@ -183,6 +183,7 @@ public class NotesUtil extends AutoresService {
 					if(key.length > 3)
 					chapter = key[3];
 
+					System.out.println(x);
 					bookId = AutoresService.bookId(seccion, obra, autor, base);
 					chapterId = 0;
 					if(chapter != null) {
@@ -232,7 +233,7 @@ public class NotesUtil extends AutoresService {
 	public static void main(String[] args) {
 		try {
 			//readNotesFromURL();
-			loadNotesFile("Patristica", false);
+			loadNotesFile("Patristica", true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -70,8 +70,10 @@ public class InterlinealService {
                     b.setBookId(result.getInt(7));
                     b.setWordId(result.getInt(8));
                     b.setLanguage(result.getString(9));
+                    NotationVo not = notation(b.getType(), b.getLanguage());
+                    b.setNotation(not);
                     b.setMorfologic("hebreo".equals(b.getLanguage()) ? simpleDetailNot(b.getType()) : 
-                        notation(b.getType(), b.getLanguage()).summary());
+                        not.summary());
 
                     res.add(b);
                 }

@@ -19,6 +19,7 @@ public class InterlinealVo {
     private String type;
     private String meaning;
     private String morfologic;
+    private NotationVo notation;
 
     public InterlinealVo(int bookId, int chapter, int verse, int strongId, String word, String type, String meaning) {
         this.bookId = bookId;

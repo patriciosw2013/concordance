@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.concordance.services.vo.MapVo;
+
 public class ListUtils {
 
     public static List<List<String>> split(List<String> in, String divisor) {
@@ -75,6 +77,30 @@ public class ListUtils {
         if (!sublistaActual.isEmpty()) {
             String clave = !existRegex ? "" : sublistaActual.get(0).replaceAll(regex, "$1");
             resultado.put(clave, sublistaActual);
+        }
+
+        return resultado;
+    }
+
+    public static List<MapVo> groupBy(List<String> lista, String regex) {
+        List<MapVo> resultado = new ArrayList<>();
+        List<String> sublistaActual = new ArrayList<>();
+        boolean existRegex = false;
+        for (String item : lista) {
+            if (item.matches(regex)) {
+                if (!sublistaActual.isEmpty()) {;
+                    String clave = !existRegex ? "" : sublistaActual.get(0).replaceAll(regex, "$1");
+                    resultado.add(new MapVo(clave, new ArrayList<>(sublistaActual)));
+                }
+                sublistaActual.clear();
+                existRegex = true;
+            }
+            sublistaActual.add(item);
+        }
+
+        if (!sublistaActual.isEmpty()) {
+            String clave = !existRegex ? "" : sublistaActual.get(0).replaceAll(regex, "$1");
+            resultado.add(new MapVo(clave, sublistaActual));
         }
 
         return resultado;

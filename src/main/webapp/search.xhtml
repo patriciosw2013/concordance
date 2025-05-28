@@ -21,31 +21,34 @@
             background-color: #FFFFFF;
             text-align: left;
         }
-		
-		.side-left {
-			width: 675px;
-		}
-		
-		.side-right {
-			width: 675px;
-		}
+
+        .side-left {
+            width: 675px;
+        }
+
+        .side-right {
+            width: 675px;
+        }
 
         .headerGrid {
-            padding-right:15px;
-		}
+            padding-right: 15px;
+        }
 
         .panelRead {
             width: 100%;
-            height: 510px;
+            height: 470px;
         }
-		
-		.navigatePanel {
-			background-color: #f2f2f2;
-			display: flex; 
-			justify-content: space-between; 
-			align-items: center; 
-			width: 100%;
-		}
+
+        .navigatePanel {
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+            border-top: none;
+            border: 1px solid #c8c8c8;
+        }
 
         .preformatted {
             white-space: pre-wrap;
@@ -58,6 +61,10 @@
         .ui-scrollpanel-hbar {
             overflow-x: initial;
         }
+
+        .ui-selectcheckboxmenu-token-label {
+            font-size: 12px !important;
+        }
     </style>
 </h:head>
 <h:body>
@@ -65,76 +72,112 @@
         <p:messages id="messages" showDetail="true" closable="true">
             <p:autoUpdate />
         </p:messages>
-        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+        <p:dialog id="modalNotes" header="Header" widgetVar="dlg1" minHeight="300" width="500" showEffect="fade"
+            closeOnEscape="true">
             <p:scrollPanel mode="native" id="pnlNotes" style="width: 450px; height: 300px;">
-                <h:outputText value="#{searchController.cita.notes}" styleClass="preformatted" escape="false" />
+                <h:outputText value="#{searchController.citas[0].notes}" styleClass="preformatted" escape="false" />
             </p:scrollPanel>
         </p:dialog>
-		<p:dialog id="modalNotesPar" header="Header" widgetVar="dlg2" minHeight="300" width="500" showEffect="fade" closeOnEscape="true">
+        <p:dialog id="modalNotesPar" header="Header" widgetVar="dlg2" minHeight="300" width="500" showEffect="fade"
+            closeOnEscape="true">
             <p:scrollPanel mode="native" id="pnlNotesPar" style="width: 450px; height: 300px;">
-                <h:outputText value="#{searchController.citaPar.notes}" styleClass="preformatted" escape="false" />
+                <h:outputText value="#{searchController.citas[1].notes}" styleClass="preformatted" escape="false" />
             </p:scrollPanel>
         </p:dialog>
         <div class="task-lists">
-            <h:panelGrid columns="4" style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 400px;">
+            <h:panelGrid columns="4"
+                style="padding-left: 30px; padding-right: 30px; padding-bottom: 0px; width: 400px;">
                 <p:inputText id="txt-input" value="#{searchController.input}" />
 
                 <p:commandButton value="Buscar" styleClass="mr-2" style="width: auto" icon="pi pi-search"
                     action="#{searchController.search}" update="searchItems,modalNotes,modalNotesPar" />
+
+                <p:divider layout="vertical" style="width: 100px;" />
+
+                <p:selectCheckboxMenu id="multiple" multiple="true" emptyLabel="Opciones" updateLabel="true"
+                    style="min-width: 20rem;" panelStyle="width: 20rem" scrollHeight="250"
+                    value="#{searchController.selectedOps}">
+                    <p:ajax event="toggleSelect" listener="#{searchController.search}"
+                        update="searchItems,modalNotes,modalNotesPar" />
+                    <p:ajax event="itemSelect" listener="#{searchController.search}"
+                        update="searchItems,modalNotes,modalNotesPar" />
+                    <p:ajax event="itemUnselect" listener="#{searchController.search}"
+                        update="searchItems,modalNotes,modalNotesPar" />
+                    <f:selectItems value="#{searchController.ops}" var="o" itemLabel="#{o}" itemValue="#{o}" />
+                </p:selectCheckboxMenu>
             </h:panelGrid>
             <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 15px; width: 100%;">
-                <h:panelGrid id="head" columns="3" columnClasses="headerGrid headerGrid headerGrid">
-                    <p:selectOneMenu id="chapters" value="#{searchController.cita.chapter}" rendered="#{not empty searchController.cita.chapters}">
-                        <f:selectItems var="o" value="#{searchController.cita.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
-                        <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}" update="pnl,head,txt-input" process="@this"/>
+                <h:panelGrid id="head" columns="3" columnClasses="headerGrid, headerGrid, headerGrid">
+                    <p:selectOneMenu id="chapters" value="#{searchController.citas[0].chapter}"
+                        rendered="#{not empty searchController.citas[0].chapters}">
+                        <f:selectItems var="o" value="#{searchController.citas[0].chapters}" itemLabel="#{o.valor}"
+                            itemValue="#{o.codigo}" />
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(0)}"
+                            update="pnl,head,txt-input" process="@this" />
                         <f:converter converterId="javax.faces.Integer" />
                     </p:selectOneMenu>
-                    <p:selectOneMenu id="versions" value="#{searchController.cita.version}">
+                    <p:selectOneMenu id="versions" value="#{searchController.citas[0].version}">
                         <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
-                        <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}" update="pnl,head" process="@this"/>
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(0)}" update="pnl,head"
+                            process="@this" />
                     </p:selectOneMenu>
-                    <p:commandButton value="" rendered="#{not empty searchController.cita.notes}" type="button" icon="pi pi-tag"
-                        styleClass="rounded-button ui-button-secondary ui-button-outlined" style="height:32px;width:32px;margin-left:10px;"
-                        update="pnlNotes" onclick="PF('dlg1').show()" />
+                    <p:commandButton value="" rendered="#{not empty searchController.citas[0].notes}" type="button"
+                        icon="pi pi-pen-to-square" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                        style="height:32px;width:32px;" update="pnlNotes" onclick="PF('dlg1').show()" />
                 </h:panelGrid>
 
-                <h:panelGrid id="headPar" columns="3" columnClasses="headerGrid headerGrid headerGrid">
-                    <p:selectOneMenu id="chaptersPar" value="#{searchController.citaPar.chapter}" rendered="#{not empty searchController.citaPar.chapters}">
-                        <f:selectItems var="o" value="#{searchController.citaPar.chapters}" itemLabel="#{o.valor}" itemValue="#{o.codigo}" />
-                        <p:ajax event="valueChange" listener="#{searchController.loadContents(2)}" update="pnlPar,headPar,txt-input" process="@this"/>
+                <h:panelGrid id="headPar" columns="3" columnClasses="headerGrid, headerGrid, headerGrid">
+                    <p:selectOneMenu id="chaptersPar" value="#{searchController.citas[1].chapter}"
+                        rendered="#{not empty searchController.citas[1].chapters}">
+                        <f:selectItems var="o" value="#{searchController.citas[1].chapters}" itemLabel="#{o.valor}"
+                            itemValue="#{o.codigo}" />
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}"
+                            update="pnlPar,headPar,txt-input" process="@this" />
                         <f:converter converterId="javax.faces.Integer" />
                     </p:selectOneMenu>
-                    <p:selectOneMenu id="versionsPar" value="#{searchController.citaPar.version}">
+                    <p:selectOneMenu id="versionsPar" value="#{searchController.citas[1].version}">
                         <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
-                        <p:ajax event="valueChange" listener="#{searchController.loadContents(2)}" update="pnlPar,headPar" process="@this"/>
+                        <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}"
+                            update="pnlPar,headPar" process="@this" />
                     </p:selectOneMenu>
-                    <p:commandButton value="" rendered="#{not empty searchController.citaPar.notes}" type="button" style="width:35px; height:30px;" update="pnlNotesPar"
-                        icon="pi pi-bookmark" onclick="PF('dlg2').show()"/>
+                    <p:commandButton value="" rendered="#{not empty searchController.citas[1].notes}" type="button"
+                        icon="pi pi-pen-to-square" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                        style="width:35px; height:30px;" update="pnlNotesPar" onclick="PF('dlg2').show()" />
                 </h:panelGrid>
 
-                <p:scrollPanel mode="native" id="pnl" styleClass="panelRead">
-					<div class="navigatePanel">
-                        <p:commandLink value="" action="#{searchController.navigate(1, 0)}" update="updateForm:searchItems">
-							<i class="pi pi-caret-left" />
+                <h:panelGroup>
+                    <div class="navigatePanel">
+                        <p:commandLink value="" action="#{searchController.navigate(0, 0)}"
+                            update="updateForm:searchItems">
+                            <i class="pi pi-caret-left" />
                         </p:commandLink>
-                        <p:commandLink value="" action="#{searchController.navigate(1, 1)}" update="updateForm:searchItems">
-							<i class="pi pi-caret-right" />
+                        <p:commandLink value="" action="#{searchController.navigate(0, 1)}"
+                            update="updateForm:searchItems">
+                            <i class="pi pi-caret-right" />
                         </p:commandLink>
-					</div>
-                    <h:outputText value="#{searchController.cita.txt}" styleClass="preformatted" escape="false" />
-                </p:scrollPanel>
+                    </div>
+                    <p:scrollPanel mode="native" id="pnl" styleClass="panelRead">
+                        <h:outputText value="#{searchController.citas[0].txt}" styleClass="preformatted"
+                            escape="false" />
+                    </p:scrollPanel>
+                </h:panelGroup>
 
-                <p:scrollPanel mode="native" id="pnlPar" styleClass="panelRead">
-					<div class="navigatePanel">
-                        <p:commandLink value="" action="#{searchController.navigate(2, 0)}" update="updateForm:searchItems">
-							<i class="pi pi-caret-left" />
+                <h:panelGroup>
+                    <div class="navigatePanel">
+                        <p:commandLink value="" action="#{searchController.navigate(1, 0)}"
+                            update="updateForm:searchItems">
+                            <i class="pi pi-caret-left" />
                         </p:commandLink>
-                        <p:commandLink value="" action="#{searchController.navigate(2, 1)}" update="updateForm:searchItems">
-							<i class="pi pi-caret-right" />
+                        <p:commandLink value="" action="#{searchController.navigate(1, 1)}"
+                            update="updateForm:searchItems">
+                            <i class="pi pi-caret-right" />
                         </p:commandLink>
-					</div>
-                    <h:outputText value="#{searchController.citaPar.txt}" styleClass="preformatted" escape="false" />
-                </p:scrollPanel>
+                    </div>
+                    <p:scrollPanel mode="native" id="pnlPar" styleClass="panelRead">
+                        <h:outputText value="#{searchController.citas[1].txt}" styleClass="preformatted"
+                            escape="false" />
+                    </p:scrollPanel>
+                </h:panelGroup>
             </p:panelGrid>
         </div>
     </h:form>

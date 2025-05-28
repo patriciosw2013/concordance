@@ -188,6 +188,11 @@ update verse set text = replace(text, '  ', ' ') where text like '%  %';
 update verse set text = rtrim(text) where text like '% '
 update verse set text = ltrim(text) where text like ' %'
 
+select substr(text, instr(text, 'URL video:') + 11, 44) from verse where text like '%https:%'
+
+update book set title = (select substr(text, instr(text, 'URL video:') + 11, 44) from verse where verse.book_id = book.id and verse.text like '%https:%')
+where autor in ('Baruc Korman')
+
 -- crear capitulos
 CREATE TABLE chapter (id INTEGER NOT NULL, book_id INTEGER, name text, PRIMARY KEY (id), FOREIGN KEY(book_id) REFERENCES book (id));
 
@@ -227,6 +232,10 @@ delete from book where autor in ('Baruc Korman', 'Fabian Liendo', 'Charles Stanl
 
 -- quitar parentesis de nombre
 update book set name = trim(substr(name, 0, instr(name, '('))) where name REGEXP '[\(\)]' and parent = 'Sermones'
+
+-- campo salmos equivalencia
+update chapter set name = 'SALMO 9 (9,10)' where book_id = 2826 and id = 4642;
+update chapter set name = NAME || ' (' || (cast(substr(name, 7, 3) as integer) + 1)  || ')' where book_id = 2826 and id between 4643 and 4804;
 
 -- quitar 0.
 update verse set text = replace(text, '0. ', '') where text like '0.%'
