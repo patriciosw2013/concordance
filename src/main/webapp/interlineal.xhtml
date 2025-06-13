@@ -151,9 +151,15 @@
 		.dot-morado {
 			background-color: purple;
 		}
+		.dot-gris {
+			background-color: gray;
+		}
+		.dot-naranja {
+			background-color: orange;
+		}
 		.dot-transparente {
 			background-color: transparent;
-			/*border: 1px solid #ccc;*/
+			border: 1px solid #ccc;
 		}
 	</style>
 </h:head>
@@ -241,7 +247,9 @@
 							<span class="dot #{o.notation.tipo eq 'Verbo' ? 'dot-rojo' : 'dot-transparente'}"/>
 							<span class="dot #{o.notation.tiempo eq 'Perfecto' ? 'dot-azul' : 
 								o.notation.tiempo eq 'Imperfecto' ? 'dot-morado' : 
-								o.notation.voz eq 'Pasiva' ? 'dot-verde' : 
+								o.notation.tiempo eq 'Pluscoamperfecto' ? 'dot-gris' : 'dot-transparente'}"/>
+							<span class="dot #{o.notation.voz eq 'Pasiva' ? 'dot-verde' : 'dot-transparente'}"/>
+							<span class="dot #{o.notation.modo eq 'Imperativo' ? 'dot-naranja' : 
 								o.notation.modo eq 'Subjuntivo' ? 'dot-amarillo' : 'dot-transparente'}"/>
 						</div>
 					</div>

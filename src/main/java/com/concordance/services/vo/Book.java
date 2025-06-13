@@ -24,4 +24,12 @@ public class Book {
 		this.parent = parent;
 		this.autor = autor;
 	}
+
+	public Book(String name, String parent, String autor, String destination, String bookDate) {
+		this.name = name;
+		this.parent = parent;
+		this.autor = autor;
+		this.destination = destination;
+		this.bookDate = bookDate;
+	}
 }

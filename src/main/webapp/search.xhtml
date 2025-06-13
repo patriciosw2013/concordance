@@ -54,7 +54,7 @@
             white-space: pre-wrap;
             text-align: left;
             padding: 10px !important;
-            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif;
+            font: 12px "latoregular", "Trebuchet MS", Arial, Helvetica, sans-serif !important;
             width: 400px;
         }
 
@@ -69,6 +69,21 @@
 </h:head>
 <h:body>
     <h:form id="updateForm">
+        <script>
+			function copyTxt(copyText) {
+				navigator.clipboard.writeText(copyText);
+			}
+
+            function copyCt(id) {
+                var ct = document.getElementById('updateForm:txt-input').value;
+                var base = document.getElementById('updateForm:versions' + id + '_input').value;
+                console.log(ct);
+                console.log(base);
+				var txt = document.getElementById('updateForm:txt' + id).innerText + ' (' + ct + ' ' + base + ')';
+
+                copyTxt(txt);
+			}
+		</script>
         <p:messages id="messages" showDetail="true" closable="true">
             <p:autoUpdate />
         </p:messages>
@@ -107,7 +122,7 @@
                 </p:selectCheckboxMenu>
             </h:panelGrid>
             <p:panelGrid id="searchItems" columns="2" layout="grid" style="padding: 15px; width: 100%;">
-                <h:panelGrid id="head" columns="3" columnClasses="headerGrid, headerGrid, headerGrid">
+                <h:panelGrid id="head" columns="4" columnClasses="headerGrid, headerGrid, headerGrid, headerGrid">
                     <p:selectOneMenu id="chapters" value="#{searchController.citas[0].chapter}"
                         rendered="#{not empty searchController.citas[0].chapters}">
                         <f:selectItems var="o" value="#{searchController.citas[0].chapters}" itemLabel="#{o.valor}"
@@ -116,7 +131,7 @@
                             update="pnl,head,txt-input" process="@this" />
                         <f:converter converterId="javax.faces.Integer" />
                     </p:selectOneMenu>
-                    <p:selectOneMenu id="versions" value="#{searchController.citas[0].version}">
+                    <p:selectOneMenu id="versions0" value="#{searchController.citas[0].version}">
                         <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
                         <p:ajax event="valueChange" listener="#{searchController.loadContents(0)}" update="pnl,head"
                             process="@this" />
@@ -124,9 +139,12 @@
                     <p:commandButton value="" rendered="#{not empty searchController.citas[0].notes}" type="button"
                         icon="pi pi-pen-to-square" styleClass="rounded-button ui-button-secondary ui-button-outlined"
                         style="height:32px;width:32px;" update="pnlNotes" onclick="PF('dlg1').show()" />
+                    <p:commandButton value="" rendered="#{not empty searchController.citas[0].txt}" type="button"
+                        icon="pi pi-copy" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                        style="width:35px; height:30px;" onclick="copyCt('0')" />
                 </h:panelGrid>
 
-                <h:panelGrid id="headPar" columns="3" columnClasses="headerGrid, headerGrid, headerGrid">
+                <h:panelGrid id="headPar" columns="4" columnClasses="headerGrid, headerGrid, headerGrid, headerGrid">
                     <p:selectOneMenu id="chaptersPar" value="#{searchController.citas[1].chapter}"
                         rendered="#{not empty searchController.citas[1].chapters}">
                         <f:selectItems var="o" value="#{searchController.citas[1].chapters}" itemLabel="#{o.valor}"
@@ -135,7 +153,7 @@
                             update="pnlPar,headPar,txt-input" process="@this" />
                         <f:converter converterId="javax.faces.Integer" />
                     </p:selectOneMenu>
-                    <p:selectOneMenu id="versionsPar" value="#{searchController.citas[1].version}">
+                    <p:selectOneMenu id="versions1" value="#{searchController.citas[1].version}">
                         <f:selectItems var="o" value="#{searchController.bases}" itemLabel="#{o}" itemValue="#{o}" />
                         <p:ajax event="valueChange" listener="#{searchController.loadContents(1)}"
                             update="pnlPar,headPar" process="@this" />
@@ -143,6 +161,9 @@
                     <p:commandButton value="" rendered="#{not empty searchController.citas[1].notes}" type="button"
                         icon="pi pi-pen-to-square" styleClass="rounded-button ui-button-secondary ui-button-outlined"
                         style="width:35px; height:30px;" update="pnlNotesPar" onclick="PF('dlg2').show()" />
+                    <p:commandButton value="" rendered="#{not empty searchController.citas[1].txt}" type="button"
+                        icon="pi pi-copy" styleClass="rounded-button ui-button-secondary ui-button-outlined"
+                        style="width:35px; height:30px;" onclick="copyCt('1')" />
                 </h:panelGrid>
 
                 <h:panelGroup>
@@ -157,8 +178,8 @@
                         </p:commandLink>
                     </div>
                     <p:scrollPanel mode="native" id="pnl" styleClass="panelRead">
-                        <h:outputText value="#{searchController.citas[0].txt}" styleClass="preformatted"
-                            escape="false" />
+                        <p:outputLabel value="#{searchController.citas[0].txt}" styleClass="preformatted"
+                            escape="false" id="txt0" />
                     </p:scrollPanel>
                 </h:panelGroup>
 
@@ -174,8 +195,8 @@
                         </p:commandLink>
                     </div>
                     <p:scrollPanel mode="native" id="pnlPar" styleClass="panelRead">
-                        <h:outputText value="#{searchController.citas[1].txt}" styleClass="preformatted"
-                            escape="false" />
+                        <p:outputLabel value="#{searchController.citas[1].txt}" styleClass="preformatted"
+                            escape="false" id="txt1" />
                     </p:scrollPanel>
                 </h:panelGroup>
             </p:panelGrid>

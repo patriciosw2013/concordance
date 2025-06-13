@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -512,7 +513,7 @@ public class BibleUtil implements Serializable {
 		return new ContentVo(chp, String.valueOf(chp), res);
 	}
 
-	public static String readNotes(int bookId, int chapter, String base) throws SQLException {
+	public static List<String> readNotes(int bookId, int chapter, String base) throws SQLException {
 		if(bookId == 0)
 			return null;
 		
@@ -530,8 +531,45 @@ public class BibleUtil implements Serializable {
 			}
 		}
 		
-		return res.stream().collect(Collectors.joining("\n"));
+		return res.stream().map(i -> procesarTextoBiblico(i).toString()).collect(Collectors.toList());
 	}
+
+	private static List<String> procesarTextoBiblico(String texto) {
+        Pattern inicioValido = Pattern.compile("^\\d+\\.\\s(?:\\d\\s*)?[A-Z][a-z]{0,3}\\s?\\.(\\s*\\d+:\\d+)");
+        Matcher inicioMatcher = inicioValido.matcher(texto.trim());
+
+        if (!inicioMatcher.find()) {
+            return Collections.singletonList(texto.trim());
+        }
+        return extraerReferencias(texto);
+    }
+
+    private static List<String> extraerReferencias(String texto) {
+        List<String> resultado = new ArrayList<>();
+
+        String regex = "((?:[1-3]\\s*)?[A-Z][a-z]{0,3}\\.)?\\s*(\\d+):(\\d+(?:-\\d+)?(?:,\\d+(?:-\\d+)?)*)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(texto);
+
+        String libroActual = "";
+		resultado.add(texto); //test
+        while (matcher.find()) {
+            String libro = matcher.group(1);
+            String capitulo = matcher.group(2);
+            String versiculos = matcher.group(3);
+
+            if (libro != null) {
+                libroActual = libro.trim();
+            }
+
+            String[] partesVersiculos = versiculos.split(",");
+            for (String v : partesVersiculos) {
+                resultado.add(libroActual + " " + capitulo + ":" + v);
+            }
+        }
+
+        return resultado;
+    }
 
 	public static void main(String[] args) {
 		try {

@@ -1,13 +1,20 @@
 package com.concordance.services.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,7 +24,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+import org.primefaces.shaded.json.JSONArray;
+import org.primefaces.shaded.json.JSONObject;
 
+import com.concordance.services.vo.Book;
+import com.concordance.services.vo.ItemStringVo;
 import com.concordance.services.vo.ItemVo;
 
 public class WebUtil {
@@ -56,6 +67,157 @@ public class WebUtil {
                     writer.println("\n");
                 }
             }
+        }
+    }
+
+    public static void readAgustinus() throws MalformedURLException, IOException {
+        Document doc = Jsoup.connect("https://www.augustinus.it/spagnolo/index.htm").get();
+        Elements enlaces = doc.select("a.LinkNero2G");
+        List<ItemStringVo> urls = new ArrayList<>();
+        Set<String> rejUrls = new HashSet<>();
+        rejUrls.add("benvenuto.htm");
+        rejUrls.add("links.htm");
+        rejUrls.add("../iconografia/index.htm");
+        rejUrls.add("copyright.htm");
+        rejUrls.add("http://augustinus.it.master.com/texis/master/search/+/form/NuovaGraficaSpagnolo.html");
+        for (Element enlace : enlaces) {
+            String url = enlace.attr("href");
+            String titulo = enlace.text();
+            if(rejUrls.contains(url)) continue;
+
+            if(url.contains("contro_fausto") || url.contains("contro_fortunato"))
+            urls.add(new ItemStringVo(titulo, "https://www.augustinus.it/spagnolo/" + url));
+        }
+
+        List<Book> urlsFinal = new ArrayList<>();
+        try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+            for (ItemStringVo item : urls) {
+                String baseUrl = item.getValor();
+                System.out.println("Procesando obra: " + baseUrl);
+                try {
+                    doc = Jsoup.connect(baseUrl).get();
+                    //writer.println(baseUrl);
+                    //writer.println(doc.html());
+                    //writer.println();
+
+                    Element frame = doc.selectFirst("frame[name=principale]");
+                    String src = frame.attr("src");
+                    String frameUrl = resolveUrl(baseUrl, src);
+                    System.out.println("OBRA: " + item.getCodigo());
+                    
+                    doc = Jsoup.connect(frameUrl).get();
+                    //writer.println(frameUrl);
+                    //writer.println(doc.html());
+                    //writer.println();
+                    Elements links = doc.select("a");
+                    frameUrl = resolveUrl(frameUrl, links.get(1).attr("href"));
+
+                    doc = Jsoup.connect(frameUrl).get();
+                    //writer.println(frameUrl);
+                    //writer.println(doc.html());
+                    //writer.println();
+                    frame = doc.selectFirst("frame[name=principale]");
+                    frameUrl = resolveUrl(frameUrl, frame.attr("src"));
+                    frame = doc.selectFirst("frame[name=sommario]");
+                    doc = Jsoup.connect(frameUrl).get();
+                    
+                    /* Pagina definitiva */
+                    //writer.println(frameUrl);
+                    //writer.println(doc.html());
+                    if(frame != null) {
+                        frameUrl = resolveUrl(frameUrl, frame.attr("src"));
+                        /* Lista de libros de la obra */
+                        doc = Jsoup.connect(frameUrl).get();
+                        //writer.println(frameUrl);
+                        //writer.println(doc.html());
+                        links = doc.select("a");
+                        for (Element lk : links) {
+                            String baseUrlBook = lk.attr("href");
+                            frameUrl = resolveUrl(frameUrl, baseUrlBook);
+                            doc = Jsoup.connect(frameUrl).get();
+                            //writer.println(lk.text());
+                            //writer.println(baseUrlBook);
+                            //writer.println(frameUrl);
+                            //writer.println(doc.html());
+
+                            String urlNotes = null;
+                            Element enlace = doc.selectFirst("a[href*=note]");
+                            if (enlace != null) {
+                                String href = enlace.attr("href");
+                                urlNotes = resolveUrl(frameUrl, href.split("#")[0]);
+                            }
+
+                            urlsFinal.add(new Book(lk.text(), item.getCodigo(), "Agustin de Hipona", frameUrl, urlNotes));
+                        }
+                    } else {
+                        frame = doc.selectFirst("frame[name=principale]");
+                        frameUrl = resolveUrl(frameUrl, frame.attr("src"));
+                        frame = doc.selectFirst("frame[name=note_pie_pagina]");
+                        String urlNotes = frame != null ? resolveUrl(frameUrl, frame.attr("src")) : null;
+                        urlsFinal.add(new Book(null, item.getCodigo(), "Agustin de Hipona", frameUrl, urlNotes));
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error procesando: " + baseUrl);
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        Map<String, List<Book>> bks = new LinkedHashMap<>();
+        for(Book x : urlsFinal) {
+            x.setDestination(readURL(x.getDestination(), StandardCharsets.ISO_8859_1.name()));
+            x.setBookDate(x.getBookDate() != null ? readURL(x.getBookDate(), StandardCharsets.ISO_8859_1.name()) : null);
+
+            if(bks.containsKey(x.getParent()))
+                bks.get(x.getParent()).add(x);
+            else {
+                List<Book> bs = new ArrayList<>();
+                bs.add(x);
+                bks.put(x.getParent(), bs);
+            }
+        }
+
+        try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+            for(Entry<String, List<Book>> x : bks.entrySet()) {
+                writer.println("<obra>");
+                writer.println(String.format("<parent>%s</parent>", x.getKey()));
+                for(Book b : x.getValue()) {
+                    writer.println("<book>");
+                    writer.println(String.format("<nombre>%s</nombre>", b.getName()));
+                    writer.println(String.format("<autor>%s</autor>", b.getAutor()));
+                    writer.println(String.format("<contenido>%s</contenido>", b.getDestination()));
+                    if(b.getBookDate() != null)
+                        writer.println(String.format("<notas>%s</notas>", b.getBookDate()));
+                    else writer.println("<notas></notas>");
+                    writer.println("</book>");
+                }
+                writer.println("</obra>");
+            }
+        }
+
+        /*try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
+            List<String> res = Files.readAllLines(new File("D:\\Desarrollo\\preview.txt").toPath(), StandardCharsets.UTF_8);
+            List<List<String>> gp = ListUtils.split(res, ">>OBRA");
+            for (List<String> o : gp) {
+                String obra = o.get(0);
+                String subobra = o.get(1);
+                String autor = o.get(2);
+                writer.println(obra);
+                writer.println(subobra);
+                writer.println(autor);
+                List<List<String>> gps = ListUtils.split(o.subList(3, o.size()), ">>CONTENT");
+                writer.println(gps.get(0).subList(10, gps.get(0).size()));
+                writer.println(gps.size() > 1 ? gps.get(1) : "SIN NOTAS");
+            }
+        }*/
+    }
+
+    private static String resolveUrl(String baseUrl, String relativePath) {
+        try {
+            return new java.net.URL(new java.net.URL(baseUrl), relativePath).toString();
+        } catch (Exception e) {
+            System.err.println("Error resolviendo URL: " + baseUrl + " + " + relativePath);
+            return relativePath;
         }
     }
 
@@ -153,7 +315,7 @@ public class WebUtil {
 
     public static void main(String[] args) {
         try {
-            
+            readAgustinus();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -72,7 +72,7 @@ public class ConcordanceService {
             book = BibleUtil.bookForVerse(verseId, base);
             vr = BibleUtil.verse(verseId, base);
             contents = BibleUtil.readContentsForVerse(verseId, base);
-            notes = BibleUtil.readNotes(book.getId(), vr.getChapterId(), base);
+            notes = BibleUtil.readNotes(book.getId(), vr.getChapterId(), base).stream().collect(Collectors.joining("\n"));
             label = book.getName() + " " + contents.getChapter();
         }
 
@@ -112,7 +112,7 @@ public class ConcordanceService {
             chapters = BibleUtil.chapters(bookId, base);
             int chapterId = chapters.get(0).getCodigo();
             contents = BibleUtil.readContents(bookId, chapter == 0 ? chapterId : chapter, base);
-            notes = BibleUtil.readNotes(bookId, chapterId, base);
+            notes = BibleUtil.readNotes(bookId, chapterId, base).stream().collect(Collectors.joining("\n"));
             label = book.getName() + " " + contents.getChapter();
         }
 
@@ -132,7 +132,7 @@ public class ConcordanceService {
             b = BibleUtil.book(bookId, base);
             chapters = BibleUtil.chapters(bookId, base);
             contents = BibleUtil.readContents(in, verse, cross, title);
-            notes = BibleUtil.readNotes(bookId, in.getChapter(), base);
+            notes = BibleUtil.readNotes(bookId, in.getChapter(), base).stream().collect(Collectors.joining("\n"));
         } catch (Exception e1) {
             e1.printStackTrace();
         }

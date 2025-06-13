@@ -201,7 +201,7 @@ public class VideoService {
 						
 						writer.println(String.format("CAPÍTULO %s", o.getChapter()) + (o.getPart() > 0 ? " P." + o.getPart() : ""));
 						writer.println(o.getDescription());
-						writer.println(String.format("URL video: <a href=\"%s\" target=\"blank\">%s</a>", url, url));
+						writer.println(String.format("URL video: %s", url));
 						writer.println(o.getTextos().trim());
 						writer.println();
 					}
@@ -217,7 +217,7 @@ public class VideoService {
 					
 					writer.println(title.trim());
 					writer.println(o.getDescription());
-					writer.println(String.format("URL video: <a href=\"%s\" target=\"blank\">%s</a>", url, url));
+					writer.println(String.format("URL video: %s", url));
 					writer.println(o.getTextos().trim());
 					writer.println();
 				});
