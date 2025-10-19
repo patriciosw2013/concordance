@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -80,12 +82,38 @@ public class WebUtil {
         rejUrls.add("../iconografia/index.htm");
         rejUrls.add("copyright.htm");
         rejUrls.add("http://augustinus.it.master.com/texis/master/search/+/form/NuovaGraficaSpagnolo.html");
+
+        Set<String> excep = new HashSet<>();
+        excep.add("lettere");
+        excep.add("discorsi");
+        excep.add("esposizioni_salmi");
+        excep.add("commento_vsg");
+        excep.add("commento_lsg");
+        excep.add("cdd");
+        excep.add("confessioni");
+        excep.add("ritrattazioni");
+        excep.add("montagna");
+        excep.add("predestinazione_santi");
+        excep.add("trinita");
+        excep.add("esposizione_romani");
+        excep.add("esposizione_galati");
+        excep.add("questioni_ettateuco");
+        excep.add("grazia_libero_arbitrio");
+        excep.add("dono_perseveranza");
+        excep.add("perfezione_giustizia");
+        excep.add("castigo_perdono");
+        excep.add("questioni_simpliciano");
+        excep.add("immortalita_anima");
+        excep.add("felicita");
+        excep.add("attribuiti");
         for (Element enlace : enlaces) {
             String url = enlace.attr("href");
             String titulo = enlace.text();
             if(rejUrls.contains(url)) continue;
 
-            if(url.contains("contro_fausto") || url.contains("contro_fortunato"))
+            if(excep.stream().filter(i -> url.contains(i)).count() > 0) continue;
+
+            //if(url.contains("contr_acc"))
             urls.add(new ItemStringVo(titulo, "https://www.augustinus.it/spagnolo/" + url));
         }
 
@@ -125,29 +153,40 @@ public class WebUtil {
                     //writer.println(frameUrl);
                     //writer.println(doc.html());
                     if(frame != null) {
+                        /* Tiene mas de 1 libro, el frame sommario tiene la lista de links */
+                        System.out.println("Tiene mas de 1 libro, lista de links");
                         frameUrl = resolveUrl(frameUrl, frame.attr("src"));
                         /* Lista de libros de la obra */
                         doc = Jsoup.connect(frameUrl).get();
-                        //writer.println(frameUrl);
-                        //writer.println(doc.html());
+                        writer.println(frameUrl);
+                        writer.println(doc.html());
                         links = doc.select("a");
                         for (Element lk : links) {
                             String baseUrlBook = lk.attr("href");
                             frameUrl = resolveUrl(frameUrl, baseUrlBook);
                             doc = Jsoup.connect(frameUrl).get();
-                            //writer.println(lk.text());
-                            //writer.println(baseUrlBook);
-                            //writer.println(frameUrl);
-                            //writer.println(doc.html());
+                            writer.println(lk.text() + ": " + frameUrl);
 
-                            String urlNotes = null;
+                            /*String urlNotes = null;
                             Element enlace = doc.selectFirst("a[href*=note]");
                             if (enlace != null) {
                                 String href = enlace.attr("href");
                                 urlNotes = resolveUrl(frameUrl, href.split("#")[0]);
                             }
 
-                            urlsFinal.add(new Book(lk.text(), item.getCodigo(), "Agustin de Hipona", frameUrl, urlNotes));
+                            urlsFinal.add(new Book(lk.text(), item.getCodigo(), "Agustin de Hipona", frameUrl, urlNotes));*/
+                            
+                            frame = doc.selectFirst("frame[name=principale]");
+                            if(frame != null) {
+                                /* Tiene estructura de texto y notas */
+                                frameUrl = resolveUrl(frameUrl, frame.attr("src"));
+                                frame = doc.selectFirst("frame[name=note_pie_pagina]");
+                                String urlNotes = frame != null ? resolveUrl(frameUrl, frame.attr("src")) : null;
+                                urlsFinal.add(new Book(lk.text(), item.getCodigo(), "Agustin de Hipona", frameUrl, urlNotes));
+                            } else {
+                                /* No tiene notas */
+                                urlsFinal.add(new Book(lk.text(), item.getCodigo(), "Agustin de Hipona", frameUrl, null));
+                            }
                         }
                     } else {
                         frame = doc.selectFirst("frame[name=principale]");
@@ -161,12 +200,18 @@ public class WebUtil {
                     e.printStackTrace();
                 }
             }
+
+            for(Book x : urlsFinal)
+                writer.println(x);
         }
 
         Map<String, List<Book>> bks = new LinkedHashMap<>();
         for(Book x : urlsFinal) {
             x.setDestination(readURL(x.getDestination(), StandardCharsets.ISO_8859_1.name()));
-            x.setBookDate(x.getBookDate() != null ? readURL(x.getBookDate(), StandardCharsets.ISO_8859_1.name()) : null);
+            if(x.getBookDate() != null)
+                x.setBookDate(x.getBookDate() != null ? readURL(x.getBookDate(), StandardCharsets.ISO_8859_1.name()) : null);
+            if(x.getBookDate() != null && x.getBookDate().length() > 0)
+                x.setBookDate(x.getBookDate().substring(x.getBookDate().indexOf("1 ")));
 
             if(bks.containsKey(x.getParent()))
                 bks.get(x.getParent()).add(x);
@@ -183,7 +228,7 @@ public class WebUtil {
                 writer.println(String.format("<parent>%s</parent>", x.getKey()));
                 for(Book b : x.getValue()) {
                     writer.println("<book>");
-                    writer.println(String.format("<nombre>%s</nombre>", b.getName()));
+                    writer.println(String.format("<nombre>%s</nombre>", b.getName() != null ? b.getName() : ""));
                     writer.println(String.format("<autor>%s</autor>", b.getAutor()));
                     writer.println(String.format("<contenido>%s</contenido>", b.getDestination()));
                     if(b.getBookDate() != null)
@@ -194,22 +239,6 @@ public class WebUtil {
                 writer.println("</obra>");
             }
         }
-
-        /*try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\versPrev.txt", "UTF-8")) {
-            List<String> res = Files.readAllLines(new File("D:\\Desarrollo\\preview.txt").toPath(), StandardCharsets.UTF_8);
-            List<List<String>> gp = ListUtils.split(res, ">>OBRA");
-            for (List<String> o : gp) {
-                String obra = o.get(0);
-                String subobra = o.get(1);
-                String autor = o.get(2);
-                writer.println(obra);
-                writer.println(subobra);
-                writer.println(autor);
-                List<List<String>> gps = ListUtils.split(o.subList(3, o.size()), ">>CONTENT");
-                writer.println(gps.get(0).subList(10, gps.get(0).size()));
-                writer.println(gps.size() > 1 ? gps.get(1) : "SIN NOTAS");
-            }
-        }*/
     }
 
     private static String resolveUrl(String baseUrl, String relativePath) {
@@ -255,6 +284,16 @@ public class WebUtil {
         List<String> res = new ArrayList<>();
         for (Element span : divs) {
             res.add(span.html());
+        }
+        return res;
+    }
+
+    public static List<String> readPrettyHtmlTags(String in, String tag) throws IOException {
+        Document document = Jsoup.parse(in);
+        Elements divs = document.select(tag);
+        List<String> res = new ArrayList<>();
+        for (Element span : divs) {
+            res.add(span.outerHtml());
         }
         return res;
     }
@@ -315,7 +354,75 @@ public class WebUtil {
 
     public static void main(String[] args) {
         try {
-            readAgustinus();
+            //readAgustinus();
+
+            /* Crea los word con las obras */
+            List<String> res = Files.readAllLines(new File("D:\\Desarrollo\\agustinus.txt").toPath(), StandardCharsets.UTF_8);
+            List<String> tags = readHtmlTags(res.stream().collect(Collectors.joining("%%")), "obra");
+            List<String> pars = null;
+            String dir = "D:\\Libros\\res\\";
+            for (String o : tags) {
+                pars = new ArrayList<>();
+                String parent = readTag(o, "parent", false);
+                List<String> obras = readHtmlTags(o, "book");
+                String autor = null;
+                for (String x : obras) {
+                    String nombre = readTag(x, "nombre", false);
+                    autor = readTag(x, "autor", false);
+                    String contenido = readTag(x, "contenido", false);
+                    contenido = contenido.replaceAll("&nbsp;", "");
+                    
+                    System.out.println(parent+ " " + nombre + " " + autor);
+                    pars.addAll(Arrays.asList(contenido.split("%%")));
+                }
+
+                FileUtils.crearDocx(pars, dir + autor + " - " + parent + ".docx");
+            }
+
+            /* Obtiene las notas */
+            try(PrintWriter writer = new PrintWriter("D:\\Desarrollo\\preview.txt", "UTF-8")) {
+                for (String o : tags) {
+                    String parent = readTag(o, "parent", false);
+                    List<String> obras = readHtmlTags(o, "book");
+                    for (String x : obras) {
+                        String nombre = readTag(x, "nombre", false);
+                        String autor = readTag(x, "autor", false);
+                        String notas = readTag(x, "notas", false);
+                        if(notas.isBlank()) continue;
+                        
+                        if(nombre.isBlank())
+                            writer.println(">>" + autor + " - " + parent + " - " + parent);
+                        else writer.println(">>" + autor + " - " + parent + " - " + nombre);
+                        for(String z : notas.split("%%"))
+                            writer.println(z);
+                        writer.println();
+                    }
+                }
+
+                writer.println();
+                for (String o : tags) {
+                    String parent = readTag(o, "parent", false);
+                    writer.println("\"" + parent + "\",");
+                }
+                writer.println();
+
+                for (String o : tags) {
+                    String parent = readTag(o, "parent", false);
+                    List<String> obras = readHtmlTags(o, "book");
+                    for(String x : obras) {
+                        String autor = readTag(x, "autor", false);
+                        String contenido = readTag(x, "contenido", false);
+                        String libro = contenido.contains("LIBRO") ? "\"^(LIBRO).*\"" : "null";
+                        String cap = contenido.contains("CAPÍTULO") ? "\"^(CAPÍTULO.*)\"" : "null";
+                        String verses = contenido.contains("1. ") ? "\"^(\\\\d+)\\\\..*\"" : "null";
+                        String tog = contenido.contains("I. 1.") ? "true" : "false";
+                        
+                        writer.println(String.format("complex.put(\"%s\",BookMetadata.builder().keySplit(%s).indexTitle(-1).regexChapter(%s).regexVerses(%s).chpTogether(%s).joiningKey(\"\\n\").build());",
+                            autor + " - " + parent, libro, cap, verses, tog));
+                        break;
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

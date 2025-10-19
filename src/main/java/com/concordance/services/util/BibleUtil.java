@@ -454,7 +454,7 @@ public class BibleUtil implements Serializable {
 			}
 		}
 		
-		return new ContentVo(chp, String.valueOf(chp), res);
+		return new ContentVo(new ChapterVo(chp, String.valueOf(chp), null), res);
 	}
 
 	public static ContentVo readContents(CitaVo in, boolean verse, boolean cross, boolean title) throws SQLException {
@@ -482,7 +482,7 @@ public class BibleUtil implements Serializable {
 			}
 		}
 		
-		return new ContentVo(chp, String.valueOf(chp), res.stream().map(i -> {
+		return new ContentVo(new ChapterVo(chp, String.valueOf(chp), null), res.stream().map(i -> {
 				String txt = i[2];
 				if(verse) txt = i[0] + " " + txt;
 				if(title && !TextUtils.isEmpty(i[1])) txt = String.format("<b>%s</b>\n%s", i[1], txt);
@@ -510,7 +510,7 @@ public class BibleUtil implements Serializable {
 			}
 		}
 		
-		return new ContentVo(chp, String.valueOf(chp), res);
+		return new ContentVo(new ChapterVo(chp, String.valueOf(chp), null), res);
 	}
 
 	public static List<String> readNotes(int bookId, int chapter, String base) throws SQLException {

@@ -370,6 +370,20 @@ public class FileUtils {
 		return res;
 	}
 
+	public static void crearDocx(List<String> parrafos, String rutaArchivo) throws IOException {
+        XWPFDocument documento = new XWPFDocument();
+        for (String texto : parrafos) {
+            XWPFParagraph parrafo = documento.createParagraph();
+            parrafo.createRun().setText(texto);
+        }
+
+        try (FileOutputStream out = new FileOutputStream(rutaArchivo)) {
+            documento.write(out);
+        }
+
+        documento.close();
+    }
+
 	public static void main(String[] args) {
 		try {
 			/*BookMetadata meta = BookMetadata.builder().keySplit("^(LIBRO).*")

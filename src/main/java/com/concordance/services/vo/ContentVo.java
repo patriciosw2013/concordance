@@ -9,7 +9,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class ContentVo {
 
-    private int chapterId;
-    private String chapter;
+    /*private int chapterId;
+    private String chapter;*/
+    private ChapterVo chapter;
     private List<String> contents;
 }

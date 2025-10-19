@@ -16,6 +16,7 @@ import com.concordance.services.util.TextUtils;
 import com.concordance.services.util.WebUtil;
 import com.concordance.services.vo.AutorVo;
 import com.concordance.services.vo.Book;
+import com.concordance.services.vo.ChapterVo;
 import com.concordance.services.vo.ContentVo;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
@@ -73,7 +74,7 @@ public class ConcordanceService {
             vr = BibleUtil.verse(verseId, base);
             contents = BibleUtil.readContentsForVerse(verseId, base);
             notes = BibleUtil.readNotes(book.getId(), vr.getChapterId(), base).stream().collect(Collectors.joining("\n"));
-            label = book.getName() + " " + contents.getChapter();
+            label = book.getName() + " " + contents.getChapter().getName();
         }
 
         if (highlight) {
@@ -90,7 +91,7 @@ public class ConcordanceService {
             }
         }
 
-        contents.setChapter(label);
+        contents.getChapter().setName(label);
         return new ResultsVo(book, contents, notes, chapters);
     }
 
@@ -113,10 +114,10 @@ public class ConcordanceService {
             int chapterId = chapters.get(0).getCodigo();
             contents = BibleUtil.readContents(bookId, chapter == 0 ? chapterId : chapter, base);
             notes = BibleUtil.readNotes(bookId, chapterId, base).stream().collect(Collectors.joining("\n"));
-            label = book.getName() + " " + contents.getChapter();
+            label = book.getName() + " " + contents.getChapter().getName();
         }
 
-        contents.setChapter(label);
+        contents.getChapter().setName(label);
         return new ResultsVo(book, contents, notes, chapters);
     }
 
@@ -146,18 +147,20 @@ public class ConcordanceService {
             }
         }
 
-        label = b.getName() + " " + contents.getChapter();
-        contents.setChapter(label);
+        label = b.getName() + " " + contents.getChapter().getName();
+        contents.getChapter().setName(label);
         return new ResultsVo(b, contents, notes, chapters);
     }
 
-    public static String label(Book b, String chapter) {
+    public static String label(Book b, ChapterVo chapter) {
         Set<String> res = new LinkedHashSet<>();
         res.add(TextUtils.value(b.getAutor(), "Anonimo"));
         res.add(b.getParent());
         res.add(b.getName());
         res.add(b.getTitle());
-        res.add(chapter);
+        res.add(chapter.getName());
+        if(chapter.getUrl() != null)
+            res.add(chapter.getUrl());
 
         Set<String> excep = new HashSet<>();
         excep.add("Sermones");

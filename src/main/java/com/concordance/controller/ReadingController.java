@@ -121,7 +121,7 @@ public class ReadingController implements Serializable {
     private void loadContents(int chapter) throws SQLException {
         if(book.getData().getCodigo() == 0) return;
         ResultsVo res = ConcordanceService.readContents(book.getData().getCodigo(), chapter, base);
-        title = res.getResults().getChapter();
+        title = res.getResults().getChapter().getName();
         txt = res.getResults().getContents().stream().collect(Collectors.joining("\n"));
         chapters = res.getChapters();
         System.out.println("txt: " + txt.length());

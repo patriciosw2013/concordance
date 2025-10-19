@@ -11,9 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,6 +24,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 
+import com.concordance.services.vo.Book;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.RecordVo;
 import com.concordance.services.vo.Verse;
@@ -786,15 +789,108 @@ public class ImportBibleUtil {
 			}
 		}
 	}
+
+	public static void loadComments(String base, boolean existHTML) throws SQLException, IOException {
+		String fileHtml = "D:\\Desarrollo\\enduring.txt";
+		if(!existHTML) {
+			Set<Integer> dbs = new HashSet<>();
+			dbs.add(1);
+			dbs.add(2);
+			dbs.add(6);
+			dbs.add(7);
+			dbs.add(8);
+			dbs.add(9);
+			dbs.add(10);
+			dbs.add(11);
+			dbs.add(12);
+			dbs.add(15);
+			dbs.add(16);
+			dbs.add(17);
+			try(PrintWriter writer = new PrintWriter(fileHtml, "UTF-8")) {
+				for(int testId : new int[]{1, 2}) {
+					for(ItemVo b : BibleUtil.booksList(testId, base)) {
+						if(b.getCodigo() < 6) continue;
+						boolean db = dbs.contains(b.getCodigo());
+						String name = TextUtils.quitarAcentos(b.getValor()).toLowerCase();
+						name = b.getCodigo() >= 9 && b.getCodigo() <= 12 ? 
+							name.replaceAll(" ", "-de-") : name.replaceAll(" ", "-");
+						name = "cantares".equals(name) ? "cantar-de-los-cantares" : name;
+						for(Integer c : BibleUtil.chaptersIds(b.getCodigo(), base)) {
+							String url = String.format("https://es.enduringword.com/comentario-biblico/%s-%s/", 
+								name, db ? TextUtils.lpad(String.valueOf(c), "0") : c);
+							System.out.println(url);
+							try {
+								String txt = WebUtil.readHTML(url);
+								List<String> tags = WebUtil.readHtmlTags(txt, "div.avia_textblock");
+
+								writer.println("<obra>");
+								writer.println(String.format("<nombre>%s</nombre>", b.getValor()));
+								writer.println(String.format("<chapter>%s</chapter>", c));
+								writer.println(String.format("<contenido>%s</contenido>", 
+									tags.stream().map(i -> WebUtil.formatHtml(i)).collect(Collectors.joining("\n"))));
+								writer.println("</obra>");
+							} catch(Exception e) {
+								System.out.println(e.getMessage());
+							}
+						}
+					}
+				}
+			}
+		}
+
+		List<String> res = Files.readAllLines(new File("D:\\Desarrollo\\enduring.txt").toPath(), StandardCharsets.UTF_8);
+		List<String> tags = WebUtil.readHtmlTags(res.stream().collect(Collectors.joining("%%")), "obra");
+		List<String> pars = new ArrayList<>();
+		String dir = "D:\\Libros\\res\\";
+		Set<String> bks = new HashSet<>();
+		for (String o : tags) {
+			String nombre = WebUtil.readTag(o, "nombre", false);
+			String chapter = WebUtil.readTag(o, "chapter", false);
+			String contenido = WebUtil.readTag(o, "contenido", false);
+
+			if(!bks.contains(nombre)) {
+				pars.add("LIBRO " + nombre.toUpperCase());
+				bks.add(nombre);
+			}
+
+			pars.add("CAPÍTULO " + chapter);
+			pars.addAll(Arrays.asList(contenido.split("%%")));
+		}
+
+		FileUtils.crearDocx(pars, dir + "David Guzik - Comentarios.docx");
+	}
+
+	public static void loadCommentsMac() throws SQLException, IOException {
+		List<String> res = Files.readAllLines(new File("D:\\Desarrollo\\macarthur.txt").toPath(), StandardCharsets.UTF_8);
+		List<String> tags = WebUtil.readHtmlTags(res.stream().collect(Collectors.joining("%%")), "obra");
+		List<String> pars = new ArrayList<>();
+		String dir = "D:\\Libros\\res\\";
+		Set<String> bks = new HashSet<>();
+		for (String o : tags) {
+			String nombre = WebUtil.readTag(o, "nombre", false);
+			String contenido = WebUtil.readTag(o, "contenido", false);
+
+			if(!bks.contains(nombre)) {
+				pars.add("LIBRO " + nombre.toUpperCase());
+				bks.add(nombre);
+			}
+
+			pars.addAll(Arrays.asList(contenido.split("%%")));
+		}
+
+		FileUtils.crearDocx(pars, dir + "John MacArthur - Biblia de Estudio.docx");
+	}
 	
 	public static void main(String[] args) {
 		try {
+			loadCommentsMac();
+			//loadComments("RVR1960", true);
 			//loadText();
 			//importBookYouversion2("RVR1960", true);
 			//read("D:\\Desarrollo\\books");
 			//loadBible("NBLA");
 			//loadBibleCatolic("Latinoamericana", true);
-			loadBibleTodo("LXX", true);
+			//loadBibleTodo("LXX", true);
 			//loadLXX(true);
 			//loadBibleGateway("RVR1960", false);
             //importBookYouversion("NBLA", false);

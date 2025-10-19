@@ -107,7 +107,7 @@ public class SearchController implements Serializable {
             Set<String> op = new HashSet<>(selectedOps);
             ResultsVo res = ConcordanceService.readContents(ct, op.contains("Versos"), op.contains("Referencias"), 
                 op.contains("Títulos"), true);
-            ct.setTitle(res.getResults().getChapter());
+            ct.setTitle(res.getResults().getChapter().getName());
             ct.setTxt(res.getResults().getContents().stream().collect(Collectors.joining("\n")));
             ct.setChapters(res.getChapters());
             ct.setNotes(res.getNotes());

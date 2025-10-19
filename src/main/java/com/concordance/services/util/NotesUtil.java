@@ -233,7 +233,7 @@ public class NotesUtil extends AutoresService {
 	public static void main(String[] args) {
 		try {
 			//readNotesFromURL();
-			loadNotesFile("Patristica", true);
+			loadNotesFile("Patristica", false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -67,7 +67,7 @@ public class ConcordanciaController implements Serializable {
         try {
             System.out.println("Consultando verseId: " + verseId);
             ResultsVo res = ConcordanceService.readContentsForVerse(Integer.parseInt(verseId), base, input, true);
-            title = res.getResults().getChapter();
+            title = res.getResults().getChapter().getName();
             txt = res.getResults().getContents().stream().collect(Collectors.joining("\n"));
             notes = res.getNotes();
         } catch (Exception e) {

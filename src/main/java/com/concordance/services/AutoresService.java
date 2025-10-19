@@ -25,6 +25,7 @@ import com.concordance.services.util.TextUtils;
 import com.concordance.services.vo.AutorVo;
 import com.concordance.services.vo.Book;
 import com.concordance.services.vo.BookMetadata;
+import com.concordance.services.vo.ChapterVo;
 import com.concordance.services.vo.ContentVo;
 import com.concordance.services.vo.ItemVo;
 import com.concordance.services.vo.Paragraph;
@@ -83,16 +84,31 @@ public class AutoresService {
 			.chapter(true).verses(false)
 			.regexChapter("^[MDCLXVI]+.*?").regexVerses(null)
 			.chapterKey(".").verseKey(null).joiningKey(" ").build());
-		complex.put("Gregorio de Nisa - La gran catequesis", BookMetadata.builder().keySplit(null)
+		complex.put("Gregorio de Nisa - La gran catequesis", BookMetadata.builder().keySplit("^(PT\\d+).*")
 			.indexTitle(-1)
 			.chapter(true).verses(true)
-			.regexChapter("^([MDCLXVI]+\\.|Prólogo).*$").regexVerses("^\\d+(\\. ).*?")
-			.chapterKey(". ").verseKey(".").joiningKey("\n").chpTogether(true).build());
-		complex.put("Tertuliano de Cartago - Sobre la oracion", BookMetadata.builder().keySplit("^(LIBRO).*")
+			.regexChapter("^([MDCLXVI]+)\\.\\s\\d+.*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").chpTogether(true).build());
+		complex.put("Tertuliano de Cartago - Sobre la oración", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter("^(CAPITULO \\d+).*").regexVerses("^(\\d+)\\..*")
+			.joiningKey("\n").build());
+		complex.put("Tertuliano de Cartago - Apologético", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(false).verses(true)
+			.regexVerses("^\\[(\\d+).*")
+			.joiningKey("\n").build());
+		complex.put("Basilio de Cesárea - A los jóvenes", BookMetadata.builder().keySplit(null)
+			.indexTitle(-1)
+			.chapter(true).verses(true)
+			.regexChapter("^([MDCLXVI]+)$").regexVerses("^(\\d+)\\..*")
+			.joiningKey(" ").build());
+		complex.put("Basilio de Cesárea - Exhortación a un hijo espiritual", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
 			.chapter(true).verses(false)
-			.regexChapter("^(CAPÍTULO).*$").regexVerses(null)
-			.chapterKey(" - ").verseKey(null).joiningKey("\n").build());
+			.regexChapter("^(\\d+\\..*|Proemio)")
+			.joiningKey(" ").build());
 		complex.put("Cirilo de Jerusalén - Catequesis", BookMetadata.builder().keySplit("^(LIBRO).*")
 			.indexTitle(-1)
 			.chapter(true).verses(true)
@@ -213,9 +229,9 @@ public class AutoresService {
 			.indexTitle(-1)
 			.regexChapter("^([MDCLXVI]+):.*").regexVerses(null)
 			.joiningKey("\n").build());
-		complex.put("Juan Crisóstomo - Homilias II", BookMetadata.builder().keySplit(null)
+		complex.put("Juan Crisóstomo - Homilías II", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
-			.regexChapter("^([MDCLXVI]+)\\sHOMILÍA.*").regexVerses(null)
+			.regexChapter("^([MDCLXVI]+)\\s.*").regexVerses(null)
 			.joiningKey("\n").build());
 		complex.put("Atanasio de Alejandria - La encarnación del Verbo", BookMetadata.builder().keySplit(null)
 			.indexTitle(-1)
@@ -281,6 +297,185 @@ public class AutoresService {
 			.indexTitle(-1)
 			.regexChapter("^(Cuestión \\d+.*)").regexVerses(null)
 			.joiningKey("\n").build());
+		
+		complex.put("Agustin de Hipona - Actas del debate con el maniqueo Fortunato",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Actas del debate con el maniqueo Félix",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Actas del debate con el donatista Emérito",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Actas del proceso a Pelagio",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter("^(CAPÍTULO.*)")
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La adivinación diabólica", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Annotaciones al libro de Job",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - A Orosio, contra los priscilianistas y origenistas",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La bondad del matrimonio", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La bondad de la viudez", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Carta a los católicos sobre la secta donatista (La unidad de la Iglesia)",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La catequesis a principiantes",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El combate cristiano", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Comentario al Génesis en réplica a los maniqueos",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Comentario literal al Génesis",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Comentario literal al Génesis (incompleto)",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Concordancia de los evangelistas",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La continencia", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Contra la mentira", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Contra los académicos", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - De las costumbres de la Iglesia Católica y de las costumbres de los maniqueos",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Debate con Maximino, obispo arriano",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La devastación de Roma", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La Dialéctica", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La dimensión del alma", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La doctrina cristiana", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Las dos almas del hombre", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El espejo de la Sagrada Escritura",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Exposición incoada de la carta a los Romanos",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La fe en lo que no se ve", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Las herejías, dedicado a Quodvultdeo",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Locuciones del Heptatéuco",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El maestro", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Manual de fe, esperanza y caridad",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El matrimonio y la concupiscencia",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La mentira", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La música", BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La naturaleza del bien", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Naturaleza y origen del alma",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter("^(CAPÍTULO.*)")
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Ochenta y tres cuestiones diversas",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Ocho cuestiones del Antiguo Testamento",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El orden", BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La piedad con los difuntos",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Regla a los siervos de Dios",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter("^(CAPÍTULO.*)")
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a Adimanto, discípulo de Manés",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a Fausto, el maniqueo",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a Gaudencio, obispo donatista",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a Juliano (obra inacabada)",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a la carta de Manés, llamada “del Fundamento”",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a la carta de Parmeniano",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a las cartas de Petiliano",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica al adversario de la Ley y los Profetas",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica al gramático Cresconio, donatista",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Respuesta al maniqueo Secundino",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica al sermón de los arrianos",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Réplica a Maximino, obispo arriano",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Resumen del debate con los donatistas",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(true).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Salmo contra la secta de Donato",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La santa virginidad", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Sermón a los fieles de la Iglesia de Cesarea",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Sermón sobre la disciplina cristiana",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Soliloquios", BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - El trabajo de los monjes", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter("^(CAPÍTULO.*)").regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Tratado sobre el bautismo",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter(null)
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Tratado contra los judíos",
+				BookMetadata.builder().keySplit(null).indexTitle(-1).regexChapter(null).regexVerses("^(\\d+)\\..*")
+						.chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - Las uniones adulterinas",
+				BookMetadata.builder().keySplit("^(LIBRO).*").indexTitle(-1).regexChapter("^(CAPÍTULO.*)")
+						.regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - La utilidad del ayuno", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(false).joiningKey("\n").build());
+		complex.put("Agustin de Hipona - De La verdadera religión", BookMetadata.builder().keySplit(null).indexTitle(-1)
+				.regexChapter(null).regexVerses("^(\\d+)\\..*").chpTogether(true).joiningKey("\n").build());
 
 		/* Autores */
 		complex.put("Tomas de Kempis - IMITACIÓN DE CRISTO", BookMetadata.builder().keySplit("^(LIBRO).*")
@@ -393,6 +588,13 @@ public class AutoresService {
 			.indexTitle(-1)
 			.regexChapter("^(CAPÍTULO.*)").regexVerses(null)
 			.joiningKey("\n").build());
+		complex.put("David Guzik - Comentarios", BookMetadata.builder().keySplit("^LIBRO.*")
+			.indexTitle(-1)
+			.regexChapter("^(CAPÍTULO.*)").regexVerses(null)
+			.joiningKey("\n").build());
+		complex.put("John MacArthur - Biblia de Estudio", BookMetadata.builder().keySplit("^LIBRO.*")
+			.indexTitle(-1)
+			.joiningKey("\n").build());
 	}
     
     public static RecordVo verse(int verseId, String base) throws SQLException {
@@ -478,7 +680,7 @@ public class AutoresService {
 			}
 		}
 		
-		return new ContentVo(chapter, chapterName(chapter, base), res);
+		return new ContentVo(chapter(chapter, base), res); //new ContentVo(chapter, chapterName(chapter, base), res);
 	}
 
 	public static String chapterName(int id, String base) throws SQLException {
@@ -490,6 +692,19 @@ public class AutoresService {
 				if(result.next()) {
 					return result.getString(1);
 				} else return null;
+			}
+		}
+	}
+
+	public static ChapterVo chapter(int id, String base) throws SQLException {
+		ResultSet result = null;
+		try (Connection conn = db.connection(base)) {
+			String sql = String.format("select name, url from chapter where id = " + id);
+			try (PreparedStatement st = conn.prepareStatement(sql)) {
+				result = st.executeQuery();
+				if(result.next()) {
+					return new ChapterVo(id, result.getString(1), result.getString(2));
+				} else return new ChapterVo();
 			}
 		}
 	}
